@@ -1,0 +1,61 @@
+# Copyright 2022 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: 'secure-setup-terraform action'
+description: 'Verify that the installed terraform binary matches a pre-computed hash. Ensure that there is a checked in provider lock file and that it is read only so that terraform cannot update it.'
+inputs:
+  terraform_version:
+    description: 'The terraform version to install'
+    default: '1.3.2'
+    required: false
+  terraform_checksum:
+    description: 'The pinned terraform checksum for the specified version'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 'checkout'
+      uses: 'actions/checkout@v3'
+    - name: 'download-linters'
+      shell: 'bash'
+      env:
+        release_version: '0.0.10'
+        release_location: 'https://github.com/bradegler/secure-setup-terraform/releases/tag'
+      run: |-
+        curl -H "Authorization: token ${{ github.token }}" -O "${{env.release_location}}/v${{env.release_version}}/secure-setup-terraform_${{env.release_version}}_linux_amd64.tar.gz"
+        tar xf secure-setup-terraform_${{env.release_version}}_linux_amd64.tar.gz
+
+    # Recursively search for terraform files in the current repo and run a linter that fails when it finds calls to 'local-exec'
+    - name: 'lint-local-exec'
+      shell: 'bash'
+      run: ./lint-local-exec ./
+
+    # Search the .github/workflows for this project and run a linter that fails if it finds a direct call to the 'hashicorp/setup-terraform' action
+    - name: 'lint-setup-terraform'
+      shell: 'bash'
+      run: ./lint-setup-terraform ./.github/workflows
+
+    - name: 'setup-terraform'
+      uses: 'hashicorp/setup-terraform@v2'
+      with:
+        terraform_version: '${{ inputs.terraform_version }}'
+    - 
+      name: 'verify-binary-checksum'
+      shell: 'bash'
+      run: |-
+        echo "${{ inputs.terraform_checksum }}  $(which terraform)" > terraform.sha256
+        shasum --algorithm 256 --check terraform.sha256
+
+

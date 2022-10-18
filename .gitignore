@@ -22,5 +22,6 @@ go.work
 
 .terraform
 
-lint-local-exec
-lint-setup-terraform
+dist/
+
+verify-terraform

@@ -1,0 +1,89 @@
+# Copyright 2022 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+project_name: secure-setup-terraform
+
+env:
+  # Global env vars for go build
+  - 'CGO_ENABLED=0'
+  - 'GO111MODULE=on'
+  - 'GOPROXY=https://proxy.golang.org,direct'
+
+before:
+  hooks:
+    - 'go mod tidy'
+    - 'go mod verify'
+
+builds:
+  -
+    id: 'lint-local-exec'
+    main: './cmd/lint-local-exec'
+    binary: 'lint-local-exec'
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - '-a'
+      - '-trimpath'
+    ldflags:
+      - '-s'
+      - '-w'
+      - '-X={{ .ModulePath }}/cmd/lint-local-exec/version.Name=lint-local-exec'
+      - '-X={{ .ModulePath }}/cmd/lint-local-exec/version.Version={{ .Version }}'
+      - '-X={{ .ModulePath }}/cmd/lint-local-exec/version.Commit={{ .Commit }}'
+      - '-extldflags=-static'
+    goos:
+      - 'darwin'
+      - 'linux'
+    goarch:
+      - 'amd64'
+      - 'arm64'
+  -
+    id: 'lint-setup-terraform'
+    main: './cmd/lint-setup-terraform'
+    binary: 'lint-setup-terraform'
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - '-a'
+      - '-trimpath'
+    ldflags:
+      - '-s'
+      - '-w'
+      - '-X={{ .ModulePath }}/cmd/lint-setup-terraform/version.Name=lint-setup-terraform'
+      - '-X={{ .ModulePath }}/cmd/lint-setup-terraform/version.Version={{ .Version }}'
+      - '-X={{ .ModulePath }}/cmd/lint-setup-terraform/version.Commit={{ .Commit }}'
+      - '-extldflags=-static'
+    goos:
+      - 'darwin'
+      - 'linux'
+    goarch:
+      - 'amd64'
+      - 'arm64'
+
+archives:
+  - format: 'tar.gz'
+    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    format_overrides:
+      - goos: 'windows'
+        format: 'zip'
+
+checksum:
+  name_template: '{{ .ProjectName }}_{{ .Version }}_SHA512SUMS'
+  algorithm: 'sha512'
+
+changelog:
+  use: 'github'
+  sort: 'asc'
+
+release:
+  draft: false
+  mode: 'replace'

@@ -1,4 +1,4 @@
-module github.com/abcxyz/lint
+module github.com/bradegler/secure-setup-terraform
 
 go 1.18
 

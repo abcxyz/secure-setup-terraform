@@ -1,5 +1,7 @@
 # Secure Setup Terraform
 
+**secure-setup-terraform not an official Google product.**
+
 This repository contains a composite GitHub Action and two linters that are built to meet the requirements set out to lightly secure the usage of HashiCorp's Terraform product from a GitHub Action.
 
 ## Linters

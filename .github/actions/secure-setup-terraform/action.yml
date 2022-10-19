@@ -31,7 +31,7 @@ runs:
     - name: 'download-linters'
       shell: 'bash'
       env:
-        release_version: '0.0.10'
+        release_version: '0.0.11'
         release_location: 'https://github.com/bradegler/secure-setup-terraform/releases/tag'
       run: |-
         curl -H "Authorization: token ${{ github.token }}" -O "${{env.release_location}}/v${{env.release_version}}/secure-setup-terraform_${{env.release_version}}_linux_amd64.tar.gz"

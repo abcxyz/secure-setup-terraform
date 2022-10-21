@@ -15,8 +15,8 @@
 package lint
 
 import (
+	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,32 +25,50 @@ import (
 // ViolationInstance is an object that contains a reference to a location
 // in a file where a lint violation was detected.
 type ViolationInstance struct {
-	Path string
-	Line int
+	ViolationType string
+	Path          string
+	Line          int
 }
 
 // Linter defines an interface selecting a set of files to apply lint rules
 // against.
 type Linter interface {
-	// ViolationType declears the type of violation the Linter identifies
-	ViolationType() string
-	// Version retrieves the human readable version string for the linter
-	Version() string
 	// Selectors provides a set of file suffixes to search for. '.tf', '.yml', etc.
 	Selectors() []string
 	// FindViolations is the specific linter implementation that is applied to each
 	// file to find any lint violations.
-	FindViolations(content []byte, path string) ([]ViolationInstance, error)
+	FindViolations(content []byte, path string) ([]*ViolationInstance, error)
 }
 
-func lint(path string, linter Linter) ([]ViolationInstance, error) {
+// RunLinter run executes the linter for a set of files
+func RunLinter(ctx context.Context, paths []string, linter Linter) error {
+	var violations []*ViolationInstance
+	// Process each provided path looking for violations
+	for _, path := range paths {
+		instances, err := lint(path, linter)
+		if err != nil {
+			return fmt.Errorf("error linting files: %w", err)
+		}
+		violations = append(violations, instances...)
+	}
+	for _, instance := range violations {
+		fmt.Printf("'%s' detected at [%s:%d]\n", instance.ViolationType, instance.Path, instance.Line)
+	}
+	if len(violations) != 0 {
+		return fmt.Errorf("found %d violation(s)", len(violations))
+	}
+
+	return nil
+}
+
+func lint(path string, linter Linter) ([]*ViolationInstance, error) {
 	isDir, err := isDirectory(path)
 	if err != nil {
 		return nil, fmt.Errorf("error reading file at path %q: %w", path, err)
 	}
-	instances := []ViolationInstance{}
+	instances := []*ViolationInstance{}
 	if isDir {
-		files, err := ioutil.ReadDir(path)
+		files, err := os.ReadDir(path)
 		if err != nil {
 			return nil, fmt.Errorf("error reading directory at path %q: %w", path, err)
 		}
@@ -68,7 +86,7 @@ func lint(path string, linter Linter) ([]ViolationInstance, error) {
 	} else {
 		for _, sel := range linter.Selectors() {
 			if strings.HasSuffix(path, sel) {
-				content, err := ioutil.ReadFile(path)
+				content, err := os.ReadFile(path)
 				if err != nil {
 					return nil, fmt.Errorf("error reading file: [%w]", err)
 				}

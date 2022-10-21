@@ -93,7 +93,7 @@ jobs:
 		filename    string
 		content     string
 		expectCount int
-		expect      []lint.ViolationInstance
+		expect      []*lint.ViolationInstance
 		wantError   bool
 	}{
 		{
@@ -101,7 +101,7 @@ jobs:
 			filename:    "/test/myfile1",
 			content:     withoutSetupTerraform,
 			expectCount: 0,
-			expect:      []lint.ViolationInstance{},
+			expect:      nil,
 			wantError:   false,
 		},
 		{
@@ -109,10 +109,11 @@ jobs:
 			filename:    "/test/myfile2",
 			content:     withSetupTerraform,
 			expectCount: 1,
-			expect: []lint.ViolationInstance{
+			expect: []*lint.ViolationInstance{
 				{
-					Path: "/test/myfile2",
-					Line: 31,
+					ViolationType: "setup-terraform",
+					Path:          "/test/myfile2",
+					Line:          31,
 				},
 			},
 			wantError: false,
@@ -120,7 +121,7 @@ jobs:
 	}
 
 	for _, tc := range cases {
-		tc := tc // IMPORTANT: don't shadow the test case
+		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()

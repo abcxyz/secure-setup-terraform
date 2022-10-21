@@ -73,13 +73,66 @@ func TestLint_FindViolations(t *testing.T) {
 		depends_on = [google_project_service.run_api]
 	}
 	`
+	withLocalExecAsString := `
+	resource "google_project_service" "local-exec" {  
+		service = "run.googleapis.com"  
+		disable_on_destroy = true
+	}
+	resource "google_cloud_run_service" "run_service" {  
+		name     = var.service_name  
+		location = var.region  
+		template {    
+			spec {      
+				containers {        
+					image = var.service_image      
+				}    
+			}  
+		}  
+		traffic {    
+			percent         = 100    
+			latest_revision = true  
+		}  
+		depends_on = [google_project_service.run_api]
+	}
+	`
+
+	withRemoteExec := `
+	resource "google_project_service" "run_api" {  
+		service = "run.googleapis.com"  
+		disable_on_destroy = true
+	}
+	resource "google_cloud_run_service" "run_service" {  
+		name     = var.service_name  
+		location = var.region  
+		template {    
+			spec {      
+				containers {        
+					image = var.service_image      
+				}    
+			}  
+		}  
+		traffic {    
+			percent         = 100    
+			latest_revision = true  
+		}  
+		depends_on = [google_project_service.run_api, null_resource.echo]
+	}
+	resource "null_resource" "echo" {  
+		provisioner "remote-exec" {    
+			inline = [
+				"puppet apply",
+				"consul join ${gcp_instance.web.private_ip}",
+			  ]
+		}
+	}
+	`
 
 	cases := []struct {
 		name        string
 		filename    string
 		content     string
 		expectCount int
-		expect      []lint.ViolationInstance
+		expect      []*lint.ViolationInstance
 		wantError   bool
 	}{
 		{
@@ -87,10 +140,11 @@ func TestLint_FindViolations(t *testing.T) {
 			filename:    "/my/path/to/testfile1",
 			content:     withLocalExec,
 			expectCount: 1,
-			expect: []lint.ViolationInstance{
+			expect: []*lint.ViolationInstance{
 				{
-					Path: "/my/path/to/testfile1",
-					Line: 23,
+					ViolationType: "local-exec",
+					Path:          "/my/path/to/testfile1",
+					Line:          23,
 				},
 			},
 			wantError: false,
@@ -100,13 +154,35 @@ func TestLint_FindViolations(t *testing.T) {
 			filename:    "/my/path/to/testfile2",
 			content:     withoutLocalExec,
 			expectCount: 0,
-			expect:      []lint.ViolationInstance{},
+			expect:      nil,
 			wantError:   false,
+		},
+		{
+			name:        "with local exec as string",
+			filename:    "/my/path/to/testfile3",
+			content:     withLocalExecAsString,
+			expectCount: 0,
+			expect:      nil,
+			wantError:   false,
+		},
+		{
+			name:        "with remote exec",
+			filename:    "/my/path/to/testfile1",
+			content:     withRemoteExec,
+			expectCount: 1,
+			expect: []*lint.ViolationInstance{
+				{
+					ViolationType: "remote-exec",
+					Path:          "/my/path/to/testfile1",
+					Line:          23,
+				},
+			},
+			wantError: false,
 		},
 	}
 
 	for _, tc := range cases {
-		tc := tc // IMPORTANT: don't shadow the test case
+		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
@@ -119,12 +195,6 @@ func TestLint_FindViolations(t *testing.T) {
 			if diff := cmp.Diff(tc.expect, results); diff != "" {
 				t.Errorf("Results (-want,+got):\n%s", diff)
 			}
-			// if tc.expectCount != len(results) {
-			// 	t.Fatalf("execpted results: %d, got: %d", tc.expectCount, len(results))
-			// }
-			// if len(tc.expect) != 0 && !reflect.DeepEqual(results, tc.expect) {
-			// 	t.Fatalf("execpted results did not match: %v, got: %v", tc.expect, results)
-			// }
 		})
 	}
 }

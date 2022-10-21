@@ -20,12 +20,11 @@ import (
 	"io"
 	"strings"
 
-	"github.com/bradegler/secure-setup-terraform/cmd/lint-setup-terraform/version"
 	"github.com/bradegler/secure-setup-terraform/pkg/lint"
 	"gopkg.in/yaml.v3"
 )
 
-const violationType = "setup-terraform"
+const tokenSetupTerraform = "setup-terraform"
 
 var selectors []string = []string{".yml", ".yaml"}
 
@@ -34,7 +33,7 @@ type GitHubActionLinter struct{}
 // FindViolations inspects a set of bytes that represent a YAML document that defines
 // a GitHub action workflow looking for steps that use the 'hashicorp/setup-terraform'
 // action.
-func (tfl *GitHubActionLinter) FindViolations(content []byte, path string) ([]lint.ViolationInstance, error) {
+func (tfl *GitHubActionLinter) FindViolations(content []byte, path string) ([]*lint.ViolationInstance, error) {
 	reader := bytes.NewReader(content)
 	node, err := parseYAML(reader)
 	if err != nil {
@@ -46,7 +45,8 @@ func (tfl *GitHubActionLinter) FindViolations(content []byte, path string) ([]li
 	if node.Kind != yaml.DocumentNode {
 		return nil, fmt.Errorf("expected document node, got %v", node.Kind)
 	}
-	violations := []lint.ViolationInstance{}
+
+	var violations []*lint.ViolationInstance
 	// Top-level object map
 	for _, docMap := range node.Content {
 		_ = docMap
@@ -85,7 +85,7 @@ func (tfl *GitHubActionLinter) FindViolations(content []byte, path string) ([]li
 											uses := step.Content[k+1]
 											// Looking for the specific 'hashicorp/setup-terraform' action
 											if strings.HasPrefix(uses.Value, "hashicorp/setup-terraform") {
-												violations = append(violations, lint.ViolationInstance{Path: path, Line: uses.Line})
+												violations = append(violations, &lint.ViolationInstance{ViolationType: tokenSetupTerraform, Path: path, Line: uses.Line})
 											}
 										}
 									}
@@ -101,9 +101,7 @@ func (tfl *GitHubActionLinter) FindViolations(content []byte, path string) ([]li
 	return violations, nil
 }
 
-func (tfl *GitHubActionLinter) Selectors() []string   { return selectors }
-func (tfl *GitHubActionLinter) ViolationType() string { return violationType }
-func (tfl *GitHubActionLinter) Version() string       { return version.HumanVersion }
+func (tfl *GitHubActionLinter) Selectors() []string { return selectors }
 
 // parseYAML parses the given reader as a yaml node.
 func parseYAML(r io.Reader) (*yaml.Node, error) {

@@ -16,10 +16,10 @@ package linter
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
-	"github.com/bradegler/secure-setup-terraform/lib"
+	"github.com/bradegler/secure-setup-terraform/pkg/lint"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestLint_FindViolations(t *testing.T) {
@@ -93,11 +93,30 @@ jobs:
 		filename    string
 		content     string
 		expectCount int
-		expect      []lib.ViolationInstance
+		expect      []lint.ViolationInstance
 		wantError   bool
 	}{
-		{name: "yaml without setup-terraform action", filename: "/test/myfile1", content: withoutSetupTerraform, expectCount: 0, expect: nil, wantError: false},
-		{name: "yaml with setup-terraform action", filename: "/test/myfile2", content: withSetupTerraform, expectCount: 1, expect: []lib.ViolationInstance{{Path: "/test/myfile2", Line: 31}}, wantError: false},
+		{
+			name:        "yaml without setup-terraform action",
+			filename:    "/test/myfile1",
+			content:     withoutSetupTerraform,
+			expectCount: 0,
+			expect:      []lint.ViolationInstance{},
+			wantError:   false,
+		},
+		{
+			name:        "yaml with setup-terraform action",
+			filename:    "/test/myfile2",
+			content:     withSetupTerraform,
+			expectCount: 1,
+			expect: []lint.ViolationInstance{
+				{
+					Path: "/test/myfile2",
+					Line: 31,
+				},
+			},
+			wantError: false,
+		},
 	}
 
 	for _, tc := range cases {
@@ -110,13 +129,10 @@ jobs:
 			l := GitHubActionLinter{}
 			results, err := l.FindViolations([]byte(tc.content), tc.filename)
 			if tc.wantError != (err != nil) {
-				t.Fatalf("expected error: %#v, got: %#v - %v", tc.wantError, err != nil, err)
+				t.Errorf("expected error: %#v, got: %#v - %v", tc.wantError, err != nil, err)
 			}
-			if tc.expectCount != len(results) {
-				t.Fatalf("execpted results: %d, got: %d", tc.expectCount, len(results))
-			}
-			if len(tc.expect) != 0 && !reflect.DeepEqual(results, tc.expect) {
-				t.Fatalf("execpted results did not match: %v, got: %v", tc.expect, results)
+			if diff := cmp.Diff(tc.expect, results); diff != "" {
+				t.Errorf("Results (-want,+got):\n%s", diff)
 			}
 		})
 	}

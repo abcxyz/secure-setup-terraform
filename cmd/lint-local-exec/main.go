@@ -22,7 +22,7 @@ import (
 	"syscall"
 
 	"github.com/bradegler/secure-setup-terraform/cmd/lint-local-exec/linter"
-	"github.com/bradegler/secure-setup-terraform/lib"
+	"github.com/bradegler/secure-setup-terraform/pkg/lint"
 )
 
 func main() {
@@ -37,5 +37,5 @@ func run() error {
 		syscall.SIGINT, syscall.SIGTERM)
 	defer done()
 
-	return lib.RunLinter(ctx, os.Args[1:], &linter.TerraformLinter{})
+	return lint.RunLinter(ctx, os.Args[1:], &linter.TerraformLinter{})
 }

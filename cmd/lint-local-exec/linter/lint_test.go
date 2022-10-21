@@ -15,31 +15,94 @@
 package linter
 
 import (
-	"fmt"
-	"reflect"
 	"testing"
 
-	"github.com/bradegler/secure-setup-terraform/lib"
+	"github.com/bradegler/secure-setup-terraform/pkg/lint"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestLint_FindViolations(t *testing.T) {
 	t.Parallel()
 
-	withLocalExec := "resource \"google_project_service\" \"run_api\" {  service = \"run.googleapis.com\"  disable_on_destroy = true}resource \"google_cloud_run_service\" \"run_service\" {  name     = var.service_name  location = var.region  template {    spec {      containers {        image = var.service_image      }    }  }  traffic {    percent         = 100    latest_revision = true  }  depends_on = [google_project_service.run_api, null_resource.echo]}resource \"null_resource\" \"echo\" {  provisioner \"local-exec\" {    command = \"echo this is a bad practice\"  }}"
-	withoutLocalExec := "resource \"google_project_service\" \"run_api\" {  service = \"run.googleapis.com\"  disable_on_destroy = true}resource \"google_cloud_run_service\" \"run_service\" {  name     = var.service_name  location = var.region  template {    spec {      containers {        image = var.service_image      }    }  }  traffic {    percent         = 100    latest_revision = true  }  depends_on = [google_project_service.run_api]"
+	withLocalExec := `
+	resource "google_project_service" "run_api" {  
+		service = "run.googleapis.com"  
+		disable_on_destroy = true
+	}
+	resource "google_cloud_run_service" "run_service" {  
+		name     = var.service_name  
+		location = var.region  
+		template {    
+			spec {      
+				containers {        
+					image = var.service_image      
+				}    
+			}  
+		}  
+		traffic {    
+			percent         = 100    
+			latest_revision = true  
+		}  
+		depends_on = [google_project_service.run_api, null_resource.echo]
+	}
+	resource "null_resource" "echo" {  
+		provisioner "local-exec" {    
+			command = "echo this is a bad practice" 
+		}
+	}
+	`
+	withoutLocalExec := `
+	resource "google_project_service" "run_api" {  
+		service = "run.googleapis.com"  
+		disable_on_destroy = true
+	}
+	resource "google_cloud_run_service" "run_service" {  
+		name     = var.service_name  
+		location = var.region  
+		template {    
+			spec {      
+				containers {        
+					image = var.service_image      
+				}    
+			}  
+		}  
+		traffic {    
+			percent         = 100    
+			latest_revision = true  
+		}  
+		depends_on = [google_project_service.run_api]
+	}
+	`
 
 	cases := []struct {
 		name        string
 		filename    string
 		content     string
 		expectCount int
-		expect      []lib.ViolationInstance
+		expect      []lint.ViolationInstance
 		wantError   bool
 	}{
-		{name: "with local exec", filename: "/my/path/to/testfile1", content: withLocalExec, expectCount: 1, expect: []lib.ViolationInstance{
-			{Path: "/my/path/to/testfile1", Line: 1},
-		}, wantError: false},
-		{name: "without local exec", filename: "/my/path/to/testfile2", content: withoutLocalExec, expectCount: 0, expect: nil, wantError: false},
+		{
+			name:        "with local exec",
+			filename:    "/my/path/to/testfile1",
+			content:     withLocalExec,
+			expectCount: 1,
+			expect: []lint.ViolationInstance{
+				{
+					Path: "/my/path/to/testfile1",
+					Line: 23,
+				},
+			},
+			wantError: false,
+		},
+		{
+			name:        "without local exec",
+			filename:    "/my/path/to/testfile2",
+			content:     withoutLocalExec,
+			expectCount: 0,
+			expect:      []lint.ViolationInstance{},
+			wantError:   false,
+		},
 	}
 
 	for _, tc := range cases {
@@ -47,19 +110,21 @@ func TestLint_FindViolations(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			fmt.Printf("Test: %s\n", tc.name)
 
 			l := TerraformLinter{}
 			results, err := l.FindViolations([]byte(tc.content), tc.filename)
 			if tc.wantError != (err != nil) {
-				t.Fatalf("expected error: %#v, got: %#v - %v", tc.wantError, err != nil, err)
+				t.Errorf("expected error: %#v, got: %#v - %v", tc.wantError, err != nil, err)
 			}
-			if tc.expectCount != len(results) {
-				t.Fatalf("execpted results: %d, got: %d", tc.expectCount, len(results))
+			if diff := cmp.Diff(tc.expect, results); diff != "" {
+				t.Errorf("Results (-want,+got):\n%s", diff)
 			}
-			if len(tc.expect) != 0 && !reflect.DeepEqual(results, tc.expect) {
-				t.Fatalf("execpted results did not match: %v, got: %v", tc.expect, results)
-			}
+			// if tc.expectCount != len(results) {
+			// 	t.Fatalf("execpted results: %d, got: %d", tc.expectCount, len(results))
+			// }
+			// if len(tc.expect) != 0 && !reflect.DeepEqual(results, tc.expect) {
+			// 	t.Fatalf("execpted results did not match: %v, got: %v", tc.expect, results)
+			// }
 		})
 	}
 }

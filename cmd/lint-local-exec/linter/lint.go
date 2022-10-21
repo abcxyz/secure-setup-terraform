@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 
 	"github.com/bradegler/secure-setup-terraform/cmd/lint-local-exec/version"
-	"github.com/bradegler/secure-setup-terraform/lib"
+	"github.com/bradegler/secure-setup-terraform/pkg/lint"
 )
 
 const violationType = "local-exec"
@@ -32,20 +32,20 @@ type TerraformLinter struct{}
 
 // FindViolations inspects a set of bytes that represent hcl from a terraform configuration file
 // looking for calls to the 'local-exec' provider.
-func (tfl *TerraformLinter) FindViolations(content []byte, path string) ([]lib.ViolationInstance, error) {
+func (tfl *TerraformLinter) FindViolations(content []byte, path string) ([]lint.ViolationInstance, error) {
 	tokens, diags := hclsyntax.LexConfig(content, path, hcl.Pos{Byte: 0, Line: 1, Column: 1})
 	if diags.HasErrors() {
 		return nil, fmt.Errorf("error lexing hcl file contents: [%s]", diags.Error())
 	}
-	instances := []lib.ViolationInstance{}
+	instances := []lint.ViolationInstance{}
 	for _, token := range tokens {
 		if token.Type == hclsyntax.TokenQuotedLit && string(token.Bytes) == violationType {
-			instances = append(instances, lib.ViolationInstance{Path: path, Line: token.Range.Start.Line})
+			instances = append(instances, lint.ViolationInstance{Path: path, Line: token.Range.Start.Line})
 		}
 	}
 	return instances, nil
 }
 
-func (tfl *TerraformLinter) GetSelectors() []string   { return selectors }
-func (tfl *TerraformLinter) GetViolationType() string { return violationType }
-func (tfl *TerraformLinter) GetVersion() string       { return version.HumanVersion }
+func (tfl *TerraformLinter) Selectors() []string   { return selectors }
+func (tfl *TerraformLinter) ViolationType() string { return violationType }
+func (tfl *TerraformLinter) Version() string       { return version.HumanVersion }

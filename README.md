@@ -24,10 +24,6 @@ The workflow in '.github/workflows/generate-terraform-checksum.yml' can be used 
 ## In a GitHub workflow
 
 ```yaml
-env:
-  terraform_version: '1.3.2'
-  terraform_checksum: '${{ secrets.TERRAFORM_CHECKSUM }}'
-
 jobs:
   secure-setup-terraform:
     runs-on: 'ubuntu-latest'
@@ -38,8 +34,8 @@ jobs:
       name: 'secure-setup-terraform'
       uses: 'bradegler/secure-setup-terraform@v0.0.10'
       with:
-        terraform_version: ${{env.terraform_version}}
-        terraform_checksum: ${{env.terraform_checksum}}
+        terraform_version: '1.3.2'
+        terraform_checksum: '${{ secrets.TERRAFORM_CHECKSUM }}'
     ## Use terraform normally
 ```
 

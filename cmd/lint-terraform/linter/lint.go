@@ -39,8 +39,18 @@ func (tfl *TerraformLinter) FindViolations(content []byte, path string) ([]*lint
 	}
 
 	var instances []*lint.ViolationInstance
+	inProvisioner := false
 	for _, token := range tokens {
-		if token.Bytes != nil && token.Type == hclsyntax.TokenQuotedLit {
+		if token.Bytes == nil {
+			continue
+		}
+
+		// Each Ident token starts a new object, we are only looking for provisioner
+		// type objects with specific types, local-exec and remote-exec
+		if token.Type == hclsyntax.TokenIdent {
+			inProvisioner = string(token.Bytes) == "provisioner"
+		}
+		if inProvisioner && token.Type == hclsyntax.TokenQuotedLit {
 			if string(token.Bytes) == tokenLocalExec {
 				instances = append(instances, &lint.ViolationInstance{ViolationType: tokenLocalExec, Path: path, Line: token.Range.Start.Line})
 			}

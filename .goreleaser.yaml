@@ -37,9 +37,9 @@ builds:
     ldflags:
       - '-s'
       - '-w'
-      - '-X={{ .ModulePath }}/pkg/internal/version.Name=lint-terraform'
-      - '-X={{ .ModulePath }}/pkg/internal/version.Version={{ .Version }}'
-      - '-X={{ .ModulePath }}/pkg/internal/version.Commit={{ .Commit }}'
+      - '-X={{ .ModulePath }}/pkg/version/version.Name=lint-terraform'
+      - '-X={{ .ModulePath }}/pkg/version/version.Version={{ .Version }}'
+      - '-X={{ .ModulePath }}/pkg/version/version.Commit={{ .Commit }}'
       - '-extldflags=-static'
     goos:
       - 'darwin'
@@ -58,9 +58,9 @@ builds:
     ldflags:
       - '-s'
       - '-w'
-      - '-X={{ .ModulePath }}/pkg/internal/version.Name=lint-action'
-      - '-X={{ .ModulePath }}/pkg/internal/version.Version={{ .Version }}'
-      - '-X={{ .ModulePath }}/pkg/internal/version.Commit={{ .Commit }}'
+      - '-X={{ .ModulePath }}/pkg/version/version.Name=lint-action'
+      - '-X={{ .ModulePath }}/pkg/version/version.Version={{ .Version }}'
+      - '-X={{ .ModulePath }}/pkg/version/version.Commit={{ .Commit }}'
       - '-extldflags=-static'
     goos:
       - 'darwin'

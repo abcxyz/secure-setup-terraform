@@ -12,30 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package version
 
-import (
-	"context"
-	"fmt"
-	"os"
-	"os/signal"
-	"syscall"
+var (
+	// Name is the name of the binary.
+	Name = "unknown"
 
-	"github.com/bradegler/secure-setup-terraform/cmd/lint-local-exec/linter"
-	"github.com/bradegler/secure-setup-terraform/pkg/lint"
+	// Version is the main package version.
+	Version = "unknown"
+
+	// Commit is the git sha.
+	Commit = "unknown"
+
+	// HumanVersion is the compiled version.
+	HumanVersion = Name + " v" + Version + " (" + Commit + ")"
 )
-
-func main() {
-	if err := run(); err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
-	}
-}
-
-func run() error {
-	ctx, done := signal.NotifyContext(context.Background(),
-		syscall.SIGINT, syscall.SIGTERM)
-	defer done()
-
-	return lint.RunLinter(ctx, os.Args[1:], &linter.TerraformLinter{})
-}

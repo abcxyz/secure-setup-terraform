@@ -1,6 +1,6 @@
 # Secure Setup Terraform
 
-This repository contains a composite GitHub action + two linters that are built to meet the requirements set out to lightly secure the usage of Hashicorp's Terraform product from a GitHub action.
+This repository contains a composite GitHub Action and two linters that are built to meet the requirements set out to lightly secure the usage of HashiCorp's Terraform product from a GitHub Action.
 
 ## Linters
 
@@ -40,11 +40,12 @@ jobs:
 ```
 
 ## Building the linters
+
 ```sh
 # Linter to find calls to the 'local-exec' terraform provider
-go build -o lint-local-exec ./cmd/lint-local-exec
+go build ./cmd/lint-local-exec
 
 # Linter to find calls to the 'setup-terraform' GitHub
 # action from Hashicopr
-go build -o lint-setup-terraform ./cmd/lint-setup-terraform
+go build ./cmd/lint-setup-terraform
 ```

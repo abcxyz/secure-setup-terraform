@@ -38,14 +38,14 @@ runs:
         tar xf secure-setup-terraform_${{env.release_version}}_linux_amd64.tar.gz
 
     # Recursively search for terraform files in the current repo and run a linter that fails when it finds calls to 'local-exec'
-    - name: 'lint-local-exec'
+    - name: 'lint-terraform'
       shell: 'bash'
-      run: ./lint-local-exec ./
+      run: ./lint-terraform ./
 
     # Search the .github/workflows for this project and run a linter that fails if it finds a direct call to the 'hashicorp/setup-terraform' action
-    - name: 'lint-setup-terraform'
+    - name: 'lint-action'
       shell: 'bash'
-      run: ./lint-setup-terraform ./.github/workflows
+      run: ./lint-action ./.github/workflows
 
     - name: 'setup-terraform'
       uses: 'hashicorp/setup-terraform@v2'

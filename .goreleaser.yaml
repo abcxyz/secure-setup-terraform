@@ -27,9 +27,9 @@ before:
 
 builds:
   -
-    id: 'lint-local-exec'
-    main: './cmd/lint-local-exec'
-    binary: 'lint-local-exec'
+    id: 'lint-terraform'
+    main: './cmd/lint-terraform'
+    binary: 'lint-terraform'
     mod_timestamp: '{{ .CommitTimestamp }}'
     flags:
       - '-a'
@@ -37,9 +37,9 @@ builds:
     ldflags:
       - '-s'
       - '-w'
-      - '-X={{ .ModulePath }}/cmd/lint-local-exec/version.Name=lint-local-exec'
-      - '-X={{ .ModulePath }}/cmd/lint-local-exec/version.Version={{ .Version }}'
-      - '-X={{ .ModulePath }}/cmd/lint-local-exec/version.Commit={{ .Commit }}'
+      - '-X={{ .ModulePath }}/pkg/internal/version.Name=lint-terraform'
+      - '-X={{ .ModulePath }}/pkg/internal/version.Version={{ .Version }}'
+      - '-X={{ .ModulePath }}/pkg/internal/version.Commit={{ .Commit }}'
       - '-extldflags=-static'
     goos:
       - 'darwin'
@@ -48,9 +48,9 @@ builds:
       - 'amd64'
       - 'arm64'
   -
-    id: 'lint-setup-terraform'
-    main: './cmd/lint-setup-terraform'
-    binary: 'lint-setup-terraform'
+    id: 'lint-action'
+    main: './cmd/lint-action'
+    binary: 'lint-action'
     mod_timestamp: '{{ .CommitTimestamp }}'
     flags:
       - '-a'
@@ -58,9 +58,9 @@ builds:
     ldflags:
       - '-s'
       - '-w'
-      - '-X={{ .ModulePath }}/cmd/lint-setup-terraform/version.Name=lint-setup-terraform'
-      - '-X={{ .ModulePath }}/cmd/lint-setup-terraform/version.Version={{ .Version }}'
-      - '-X={{ .ModulePath }}/cmd/lint-setup-terraform/version.Commit={{ .Commit }}'
+      - '-X={{ .ModulePath }}/pkg/internal/version.Name=lint-action'
+      - '-X={{ .ModulePath }}/pkg/internal/version.Version={{ .Version }}'
+      - '-X={{ .ModulePath }}/pkg/internal/version.Commit={{ .Commit }}'
       - '-extldflags=-static'
     goos:
       - 'darwin'

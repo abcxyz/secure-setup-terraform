@@ -4,9 +4,9 @@ This repository contains a composite GitHub Action and two linters that are buil
 
 ## Linters
 
-'lint-local-exec' is a linter built to find calls to the 'local-exec' provider in a set of Terraform files
+'lint-terraform' is a linter built to find calls to the 'local-exec' and 'remote-exec' providers in a set of Terraform files
 
-'lint-setup-terraform' is a linter built to find calls to the 'hashicorp/setup-terraform' action from a GitHub workflow
+'lint-action' is a linter built to find calls to the 'hashicorp/setup-terraform' action from a GitHub workflow
 
 ## Composite Action
 

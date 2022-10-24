@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package lint
+package linter
 
 import (
 	"context"
@@ -52,7 +52,7 @@ func RunLinter(ctx context.Context, paths []string, linter Linter) error {
 		violations = append(violations, instances...)
 	}
 	for _, instance := range violations {
-		fmt.Printf("'%s' detected at [%s:%d]\n", instance.ViolationType, instance.Path, instance.Line)
+		fmt.Printf("%q detected at [%s:%d]\n", instance.ViolationType, instance.Path, instance.Line)
 	}
 	if len(violations) != 0 {
 		return fmt.Errorf("found %d violation(s)", len(violations))
@@ -88,7 +88,7 @@ func lint(path string, linter Linter) ([]*ViolationInstance, error) {
 			if strings.HasSuffix(path, sel) {
 				content, err := os.ReadFile(path)
 				if err != nil {
-					return nil, fmt.Errorf("error reading file: [%w]", err)
+					return nil, fmt.Errorf("error reading file: %w", err)
 				}
 				results, err := linter.FindViolations(content, path)
 				if err != nil {

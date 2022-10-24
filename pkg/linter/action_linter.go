@@ -48,7 +48,6 @@ func (tfl *GitHubActionLinter) FindViolations(content []byte, path string) ([]*V
 	var violations []*ViolationInstance
 	// Top-level object map
 	for _, docMap := range node.Content {
-		_ = docMap
 		if docMap.Kind != yaml.MappingNode {
 			continue
 		}

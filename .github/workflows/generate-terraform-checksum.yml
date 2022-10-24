@@ -39,11 +39,18 @@ jobs:
           export GNUPGHOME=./.gnupg
 
           # Terraform variables
-          export ARCH=darwin_amd64
-          export RELEASE_URL=https://releases.hashicorp.com/terraform/${VERSION}
-          export BIN_FILE=terraform_${VERSION}_${ARCH}.zip
-          export SHA_FILE=terraform_${VERSION}_SHA256SUMS
-          export SIG_FILE=terraform_${VERSION}_SHA256SUMS.sig
+          export OS=linux
+          export ARCH=amd64
+          export RELEASE_INFORMATION_URL=https://releases.hashicorp.com/terraform/"${VERSION}"/index.json
+          export RELEASE_URL=https://releases.hashicorp.com/terraform/"${VERSION}"
+
+          curl --remote-name "${RELEASE_INFORMATION_URL}"
+
+
+          export BIN_URL=$(jq -r '.builds[] | select(.os=="linux") | select(.arch=="amd64") | .url' < index.json)
+          export BIN_FILE=$(jq -r '.builds[] | select(.os=="linux") | select(.arch=="amd64") | .filename' < index.json)
+          export SHA_FILE=$(jq -r '.shasums' < index.json)
+          export SIG_FILE=$(jq -r '.shasums_signature' < index.json)
 
           # Generate a temporary key to use for verification
           gpg --batch --quick-generate-key --batch --passphrase "" github-action@abcxyz.dev
@@ -60,22 +67,22 @@ jobs:
           gpg --batch --yes --trust-model always --sign-key 34365D9472D7468F
 
           # Download the archive, sha file and signature
-          curl --remote-name ${RELEASE_URL}/${BIN_FILE}
-          curl --remote-name ${RELEASE_URL}/${SHA_FILE}
-          curl --remote-name ${RELEASE_URL}/${SIG_FILE}
+          curl --remote-name "${BIN_URL}"
+          curl --remote-name "${RELEASE_URL}/${SHA_FILE}"
+          curl --remote-name "${RELEASE_URL}/${SIG_FILE}"
 
           # Verify the signature against the sha file
           echo "verifying shas"
-          gpg --batch --verify ${SIG_FILE} ${SHA_FILE}
+          gpg --batch --verify "${SIG_FILE}" "${SHA_FILE}"
 
           # Verify the archive's checksum
-          shasum --algorithm 256 --check --ignore-missing ${SHA_FILE}
+          shasum --algorithm 256 --check --ignore-missing "${SHA_FILE}"
 
           # Extract the binary from the archive
-          unzip -o ${BIN_FILE}
+          unzip -o "${BIN_FILE}"
 
           # Extract only the shasum for the archive we care about
-          ARCH_SUM=$(grep ${BIN_FILE} ${SHA_FILE} | cut -d' ' -f1)
+          ARCH_SUM=$(grep "${BIN_FILE}" "${SHA_FILE}" | cut -d' ' -f1)
 
           # Produce a checksum of the binary
           BIN_SUM=$(shasum -a 256 terraform | cut -d' ' -f1)

@@ -42,10 +42,10 @@ jobs:
 ## Building the linters
 
 ```sh
-# Linter to find calls to the 'local-exec' terraform provider
-go build ./cmd/lint-local-exec
+# Linter to find calls to the 'local-exec' and 'remote-exec' terraform providers
+go build ./cmd/lint-terraform
 
 # Linter to find calls to the 'setup-terraform' GitHub
-# action from Hashicopr
-go build ./cmd/lint-setup-terraform
+# action from HashiCorp
+go build ./cmd/lint-action
 ```

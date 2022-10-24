@@ -22,6 +22,5 @@ go.work
 
 .terraform
 
+# Go releaser build directory
 dist/
-
-verify-terraform

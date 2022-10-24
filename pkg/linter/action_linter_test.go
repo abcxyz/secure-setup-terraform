@@ -18,11 +18,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/bradegler/secure-setup-terraform/pkg/lint"
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestLint_FindViolations(t *testing.T) {
+func TestActionLinter_FindViolations(t *testing.T) {
 	t.Parallel()
 
 	withoutSetupTerraform := `
@@ -93,7 +92,7 @@ jobs:
 		filename    string
 		content     string
 		expectCount int
-		expect      []*lint.ViolationInstance
+		expect      []*ViolationInstance
 		wantError   bool
 	}{
 		{
@@ -109,7 +108,7 @@ jobs:
 			filename:    "/test/myfile2",
 			content:     withSetupTerraform,
 			expectCount: 1,
-			expect: []*lint.ViolationInstance{
+			expect: []*ViolationInstance{
 				{
 					ViolationType: "setup-terraform",
 					Path:          "/test/myfile2",
@@ -130,10 +129,10 @@ jobs:
 			l := GitHubActionLinter{}
 			results, err := l.FindViolations([]byte(tc.content), tc.filename)
 			if tc.wantError != (err != nil) {
-				t.Errorf("expected error: %#v, got: %#v - %v", tc.wantError, err != nil, err)
+				t.Errorf("expected error want: %#v, got: %#v - error: %v", tc.wantError, err != nil, err)
 			}
 			if diff := cmp.Diff(tc.expect, results); diff != "" {
-				t.Errorf("Results (-want,+got):\n%s", diff)
+				t.Errorf("results (-want,+got):\n%s", diff)
 			}
 		})
 	}

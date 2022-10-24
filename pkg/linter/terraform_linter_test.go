@@ -17,11 +17,10 @@ package linter
 import (
 	"testing"
 
-	"github.com/bradegler/secure-setup-terraform/pkg/lint"
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestLint_FindViolations(t *testing.T) {
+func TestTerraformLinter_FindViolations(t *testing.T) {
 	t.Parallel()
 
 	withLocalExec := `
@@ -132,7 +131,7 @@ func TestLint_FindViolations(t *testing.T) {
 		filename    string
 		content     string
 		expectCount int
-		expect      []*lint.ViolationInstance
+		expect      []*ViolationInstance
 		wantError   bool
 	}{
 		{
@@ -140,7 +139,7 @@ func TestLint_FindViolations(t *testing.T) {
 			filename:    "/my/path/to/testfile1",
 			content:     withLocalExec,
 			expectCount: 1,
-			expect: []*lint.ViolationInstance{
+			expect: []*ViolationInstance{
 				{
 					ViolationType: "local-exec",
 					Path:          "/my/path/to/testfile1",
@@ -170,7 +169,7 @@ func TestLint_FindViolations(t *testing.T) {
 			filename:    "/my/path/to/testfile1",
 			content:     withRemoteExec,
 			expectCount: 1,
-			expect: []*lint.ViolationInstance{
+			expect: []*ViolationInstance{
 				{
 					ViolationType: "remote-exec",
 					Path:          "/my/path/to/testfile1",
@@ -190,10 +189,10 @@ func TestLint_FindViolations(t *testing.T) {
 			l := TerraformLinter{}
 			results, err := l.FindViolations([]byte(tc.content), tc.filename)
 			if tc.wantError != (err != nil) {
-				t.Errorf("expected error: %#v, got: %#v - %v", tc.wantError, err != nil, err)
+				t.Errorf("expected error want: %#v, got: %#v - error: %v", tc.wantError, err != nil, err)
 			}
 			if diff := cmp.Diff(tc.expect, results); diff != "" {
-				t.Errorf("Results (-want,+got):\n%s", diff)
+				t.Errorf("results (-want,+got):\n%s", diff)
 			}
 		})
 	}

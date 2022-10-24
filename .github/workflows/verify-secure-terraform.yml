@@ -38,5 +38,5 @@ jobs:
       name: 'secure-setup-terraform'
       uses: './.github/actions/secure-setup-terraform'
       with:
-        terraform_version: ${{env.terraform_version}}
-        terraform_checksum: ${{env.terraform_checksum}}
+        terraform_version: ${{inputs.terraform_version}}
+        terraform_checksum: ${{inputs.terraform_checksum}}

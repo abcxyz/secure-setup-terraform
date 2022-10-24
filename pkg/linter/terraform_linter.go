@@ -19,26 +19,24 @@ import (
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
-
-	"github.com/bradegler/secure-setup-terraform/pkg/lint"
 )
 
 const tokenLocalExec = "local-exec"
 const tokenRemoteExec = "remote-exec"
 
-var selectors = []string{".tf", ".tf.json"}
+var terraformSelectors = []string{".tf", ".tf.json"}
 
 type TerraformLinter struct{}
 
 // FindViolations inspects a set of bytes that represent hcl from a terraform configuration file
 // looking for calls to the 'local-exec' provider.
-func (tfl *TerraformLinter) FindViolations(content []byte, path string) ([]*lint.ViolationInstance, error) {
+func (tfl *TerraformLinter) FindViolations(content []byte, path string) ([]*ViolationInstance, error) {
 	tokens, diags := hclsyntax.LexConfig(content, path, hcl.Pos{Byte: 0, Line: 1, Column: 1})
 	if diags.HasErrors() {
 		return nil, fmt.Errorf("error lexing hcl file contents: [%s]", diags.Error())
 	}
 
-	var instances []*lint.ViolationInstance
+	var instances []*ViolationInstance
 	inProvisioner := false
 	for _, token := range tokens {
 		if token.Bytes == nil {
@@ -52,14 +50,14 @@ func (tfl *TerraformLinter) FindViolations(content []byte, path string) ([]*lint
 		}
 		if inProvisioner && token.Type == hclsyntax.TokenQuotedLit {
 			if string(token.Bytes) == tokenLocalExec {
-				instances = append(instances, &lint.ViolationInstance{ViolationType: tokenLocalExec, Path: path, Line: token.Range.Start.Line})
+				instances = append(instances, &ViolationInstance{ViolationType: tokenLocalExec, Path: path, Line: token.Range.Start.Line})
 			}
 			if string(token.Bytes) == tokenRemoteExec {
-				instances = append(instances, &lint.ViolationInstance{ViolationType: tokenRemoteExec, Path: path, Line: token.Range.Start.Line})
+				instances = append(instances, &ViolationInstance{ViolationType: tokenRemoteExec, Path: path, Line: token.Range.Start.Line})
 			}
 		}
 	}
 	return instances, nil
 }
 
-func (tfl *TerraformLinter) Selectors() []string { return selectors }
+func (tfl *TerraformLinter) Selectors() []string { return terraformSelectors }

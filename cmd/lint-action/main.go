@@ -23,15 +23,14 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/bradegler/secure-setup-terraform/cmd/lint-action/linter"
-	"github.com/bradegler/secure-setup-terraform/pkg/lint"
+	"github.com/bradegler/secure-setup-terraform/pkg/linter"
 	"github.com/bradegler/secure-setup-terraform/pkg/version"
 )
 
 const lintCommandHelp = `
 The "lint" command 
 EXAMPLES
-  lint-action <file1> <file2> <directory>
+  lint-terraform <file1> <file2> <directory>
 FLAGS
 `
 
@@ -65,8 +64,8 @@ func realMain() error {
 	// The linter needs at least one file or directory
 	args := f.Args()
 	if got := len(args); got < 1 {
-		return fmt.Errorf("expected atleast one argument, got %d", got)
+		return fmt.Errorf("expected at least one argument, got %d", got)
 	}
 
-	return lint.RunLinter(ctx, args, &linter.GitHubActionLinter{})
+	return linter.RunLinter(ctx, args, &linter.GitHubActionLinter{})
 }

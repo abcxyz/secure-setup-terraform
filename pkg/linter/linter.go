@@ -35,6 +35,7 @@ type ViolationInstance struct {
 type Linter interface {
 	// Selectors provides a set of file suffixes to search for. '.tf', '.yml', etc.
 	Selectors() []string
+
 	// FindViolations is the specific linter implementation that is applied to each
 	// file to find any lint violations.
 	FindViolations(content []byte, path string) ([]*ViolationInstance, error)

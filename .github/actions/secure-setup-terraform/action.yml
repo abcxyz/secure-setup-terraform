@@ -31,11 +31,11 @@ runs:
     - name: 'download-linters'
       shell: 'bash'
       env:
-        release_version: '0.0.11'
-        release_location: 'https://github.com/bradegler/secure-setup-terraform/releases/tag'
+        RELEASE_VERSION: '0.0.11'
+        RELEASE_LOCATION: 'https://github.com/bradegler/secure-setup-terraform/releases/tag'
       run: |-
-        curl -H "Authorization: token ${{ github.token }}" -O "${{env.release_location}}/v${{env.release_version}}/secure-setup-terraform_${{env.release_version}}_linux_amd64.tar.gz"
-        tar xf secure-setup-terraform_${{env.release_version}}_linux_amd64.tar.gz
+        curl -H "Authorization: token ${{ github.token }}" -O "${{env.RELEASE_LOCATION}}/v${{env.RELEASE_VERSION}}/secure-setup-terraform_${{env.RELEASE_VERSION}}_linux_amd64.tar.gz"
+        tar xf secure-setup-terraform_${{env.RELEASE_VERSION}}_linux_amd64.tar.gz
 
     # Recursively search for terraform files in the current repo and run a linter that fails when it finds calls to 'local-exec'
     - name: 'lint-terraform'

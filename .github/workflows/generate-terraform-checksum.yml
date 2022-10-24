@@ -47,8 +47,8 @@ jobs:
           curl --remote-name "${RELEASE_INFORMATION_URL}"
 
 
-          export BIN_URL=$(jq -r '.builds[] | select(.os=="linux") | select(.arch=="amd64") | .url' < index.json)
-          export BIN_FILE=$(jq -r '.builds[] | select(.os=="linux") | select(.arch=="amd64") | .filename' < index.json)
+          export BIN_URL=$(jq -r '.builds[] | select(.os=="linux" and .arch=="amd64") | .url' < index.json)
+          export BIN_FILE=$(jq -r '.builds[] | select(.os=="linux" and .arch=="amd64") | .filename' < index.json)
           export SHA_FILE=$(jq -r '.shasums' < index.json)
           export SIG_FILE=$(jq -r '.shasums_signature' < index.json)
 

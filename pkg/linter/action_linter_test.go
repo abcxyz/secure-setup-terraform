@@ -15,7 +15,6 @@
 package linter
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -124,7 +123,6 @@ jobs:
 
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			fmt.Printf("Test: %s\n", tc.name)
 
 			l := GitHubActionLinter{}
 			results, err := l.FindViolations([]byte(tc.content), tc.filename)

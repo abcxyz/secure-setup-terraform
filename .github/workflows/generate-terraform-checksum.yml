@@ -27,7 +27,7 @@ jobs:
   get_and_verify_checksum:
     runs-on: 'ubuntu-latest'
     env:
-      VERSION: ${{ inputs.terraform_version }}
+      VERSION: '${{ inputs.terraform_version }}'
     outputs:
       binary_checksum: '${{ steps.verify-checksum.outputs.binary_checksum }}'
       archive_checksum: '${{ steps.verify-checksum.outputs.archive_checksum }}'
@@ -81,7 +81,7 @@ jobs:
           BIN_SUM=$(shasum -a 256 terraform | cut -d' ' -f1)
 
           # Store the binary and the archive checksums as outputs
-          echo "archive_checksum=${ARCH_SUM}"
-          echo "binary_checksum=${BIN_SUM}"
+          echo "archive_checksum=${ARCH_SUM}" >> $GITHUB_OUTPUT
+          echo "binary_checksum=${BIN_SUM}" >> $GITHUB_OUTPUT
 
           unset GNUPGHOME

@@ -1,4 +1,4 @@
-module github.com/bradegler/secure-setup-terraform
+module github.com/abcxyz/secure-setup-terraform
 
 go 1.18
 

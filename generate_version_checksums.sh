@@ -5,7 +5,7 @@ cd temp || exit
 
 export GNUPGHOME=./.gnupg;
 
-checksum_file=../secure-setup-terraform-checksums.json
+checksum_file=../terraform-checksums.json
 
 # Generate a temporary key to use for verification
 gpg --batch --quick-generate-key --batch --passphrase "" github-action@abcxyz.dev;

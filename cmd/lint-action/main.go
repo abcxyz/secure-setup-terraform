@@ -23,8 +23,8 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/bradegler/secure-setup-terraform/pkg/linter"
-	"github.com/bradegler/secure-setup-terraform/pkg/version"
+	"github.com/abcxyz/secure-setup-terraform/pkg/linter"
+	"github.com/abcxyz/secure-setup-terraform/pkg/version"
 )
 
 const lintCommandHelp = `

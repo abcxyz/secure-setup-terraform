@@ -34,10 +34,9 @@ jobs:
       uses: 'actions/checkout@v3'
     -
       name: 'secure-setup-terraform'
-      uses: 'bradegler/secure-setup-terraform@v0.0.10'
+      uses: 'abcxyz/secure-setup-terraform@v0.1.0'
       with:
-        terraform_version: '1.3.2'
-        terraform_checksum: '${{ secrets.TERRAFORM_CHECKSUM }}'
+        terraform_version: '1.3.3'
     ## Use terraform normally
 ```
 

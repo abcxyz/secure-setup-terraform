@@ -41,7 +41,7 @@ type Linter interface {
 	FindViolations(content []byte, path string) ([]*ViolationInstance, error)
 }
 
-// RunLinter run executes the linter for a set of files
+// RunLinter run executes the linter for a set of files.
 func RunLinter(ctx context.Context, paths []string, linter Linter) error {
 	var violations []*ViolationInstance
 	// Process each provided path looking for violations
@@ -83,7 +83,6 @@ func lint(path string, linter Linter) ([]*ViolationInstance, error) {
 				instances = append(instances, results...)
 			}
 		}
-		return instances, err
 	} else {
 		for _, sel := range linter.Selectors() {
 			if strings.HasSuffix(path, sel) {

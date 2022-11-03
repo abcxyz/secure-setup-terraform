@@ -25,7 +25,7 @@ import (
 
 const tokenSetupTerraform = "setup-terraform"
 
-var actionSelectors []string = []string{".yml", ".yaml"}
+var actionSelectors = []string{".yml", ".yaml"}
 
 type GitHubActionLinter struct{}
 
@@ -70,7 +70,6 @@ func (tfl *GitHubActionLinter) FindViolations(content []byte, path string) ([]*V
 							continue
 						}
 						for j, sub := range jobMap.Content {
-
 							// List of steps, iterate over each step and find the "uses" clause.
 							if sub.Value == "steps" {
 								steps := jobMap.Content[j+1]

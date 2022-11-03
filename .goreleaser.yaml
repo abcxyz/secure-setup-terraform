@@ -79,6 +79,9 @@ archives:
 checksum:
   name_template: '{{ .ProjectName }}_{{ .Version }}_SHA512SUMS'
   algorithm: 'sha512'
+  extra_files:
+    - glob: terraform-checksums.json
+      name_template: '{{ .ProjectName }}_{{ .Version }}_checksums.json'
 
 changelog:
   use: 'github'
@@ -87,3 +90,7 @@ changelog:
 release:
   draft: false
   mode: 'replace'
+  extra_files:
+    - glob: terraform-checksums.json
+      name_template: '{{ .ProjectName }}_{{ .Version }}_checksums.json'
+

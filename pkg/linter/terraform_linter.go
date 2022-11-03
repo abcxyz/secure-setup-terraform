@@ -21,8 +21,10 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 )
 
-const tokenLocalExec = "local-exec"
-const tokenRemoteExec = "remote-exec"
+const (
+	tokenLocalExec  = "local-exec"
+	tokenRemoteExec = "remote-exec"
+)
 
 var terraformSelectors = []string{".tf", ".tf.json"}
 
@@ -33,6 +35,7 @@ type TerraformLinter struct{}
 func (tfl *TerraformLinter) FindViolations(content []byte, path string) ([]*ViolationInstance, error) {
 	tokens, diags := hclsyntax.LexConfig(content, path, hcl.Pos{Byte: 0, Line: 1, Column: 1})
 	if diags.HasErrors() {
+		//nolint
 		return nil, fmt.Errorf("error lexing hcl file contents: [%s]", diags.Error())
 	}
 

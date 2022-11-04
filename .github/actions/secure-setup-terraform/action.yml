@@ -53,7 +53,7 @@ runs:
       name: 'verify-binary-checksum'
       shell: 'bash'
       run: |-
-        CHECKSUM=$(jq -r '.versions[] | select(.version=="1.3.3" and .arch=="amd64" and .os=="linux") | .binary_checksum' < terraform-checksums.json)
+        CHECKSUM=$(jq -r --arg version ${{ inputs.terraform_version }} '.versions[] | select(.version==$version and .arch=="amd64" and .os=="linux") | .binary_checksum' < terraform-checksums.json)
         echo "${CHECKSUM}  $(which terraform)" > terraform.sha256
         shasum --algorithm 256 --check terraform.sha256
 

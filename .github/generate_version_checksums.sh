@@ -1,11 +1,11 @@
 #!/bin/sh
 
-mkdir temp
+mkdir -p temp
 cd temp || exit
 
 export GNUPGHOME=./.gnupg;
 
-checksum_file=../terraform-checksums.json
+checksum_file=../../terraform-checksums.json
 
 # Generate a temporary key to use for verification
 gpg --batch --quick-generate-key --batch --passphrase "" github-action@abcxyz.dev;
@@ -25,6 +25,11 @@ curl -s --remote-name ${release_url}/index.json;
 
 # Exclude all 0.x and pre-release versions
 jq -r 'select(.name=="terraform") | .versions[] | select(.version | (contains("-") or startswith("0.")) | not) | .version' < index.json > versions.list;
+
+
+added_file=added.list;
+
+touch "${added_file}";
 
 while IFS= read -r version; 
 do 
@@ -67,8 +72,25 @@ do
             mv updated.json "${checksum_file}";
 
         done;
+
+        echo "${version}" >> "${added_file}";
     fi
 
 done < versions.list;
+
+# If there were any changes set some environment variables
+if [ -s ${added_file} ]; 
+then
+    change_count=$(wc -l ${added_file} | tr -s ' ' | cut -d ' ' -f2);
+    change_date=$(date +%Y-%m-%d);
+    versions=$(cat ${added_file} | tr '\n' ',' | sed 's/,*$//g');
+
+    {
+        echo "CHANGES=${change_count}";
+        echo "PR_BRANCH=update-checksums-${change_date}";
+        echo "UPDATE_DATE=${change_date}";
+        echo "VERSIONS=${versions}";
+    } >> "${GITHUB_ENV}";
+fi;
 
 unset GNUPGHOME;

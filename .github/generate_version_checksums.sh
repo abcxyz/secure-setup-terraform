@@ -1,11 +1,16 @@
 #!/bin/sh
 
+checksum_file=$1
+if [ "${checksum_file}" = "" ];
+then
+    echo "Usage: $0 <path to checkums file>";
+    exit 1;
+fi;
+
 mkdir -p temp
 cd temp || exit
 
 export GNUPGHOME=./.gnupg;
-
-checksum_file=../terraform-checksums.json
 
 # Generate a temporary key to use for verification
 gpg --batch --quick-generate-key --batch --passphrase "" github-action@abcxyz.dev;

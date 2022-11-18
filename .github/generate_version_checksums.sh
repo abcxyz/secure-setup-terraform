@@ -86,7 +86,7 @@ done < versions.list;
 # If there were any changes set some environment variables
 if [ -s ${added_file} ]; 
 then
-    change_count=$(wc -l ${added_file} | tr -s ' ' | cut -d ' ' -f2);
+    change_count=$(wc -l ${added_file} | tr -s ' ' | cut -d ' ' -f1);
     change_date=$(date +%Y-%m-%d);
     versions=$(cat ${added_file} | tr '\n' ',' | sed 's/,*$//g');
 

@@ -37,6 +37,7 @@ jobs:
       uses: 'abcxyz/secure-setup-terraform@v0.1.0'
       with:
         terraform_version: '1.3.3'
+        terraform_lockfile_location: './terraform/modules'
     ## Use terraform normally
 ```
 

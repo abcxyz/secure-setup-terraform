@@ -21,7 +21,13 @@ inputs:
     required: false
   terraform_lockfile_location:
     description: 'Path to the directory containing the .terraform.lock.hcl file. This action will mark this file readonly to prevent terraform init calls from adding new providers.'
-    required: true
+    required: false
+    default: './'
+  terraform_use_wrapper:
+    description: 'All the setup-terraform action to install the wrapper'
+    required: false
+    default: 'true'
+
 
 runs:
   using: 'composite'
@@ -52,13 +58,18 @@ runs:
       uses: 'hashicorp/setup-terraform@v2'
       with:
         terraform_version: '${{ inputs.terraform_version }}'
-        terraform_wrapper: false
+        terraform_wrapper: '${{ inputs.terraform_use_wrapper }}'
     - 
       name: 'verify-binary-checksum'
       shell: 'bash'
       run: |-
         CHECKSUM=$(jq -r --arg version ${{ inputs.terraform_version }} '.versions[] | select(.version==$version and .arch=="amd64" and .os=="linux") | .binary_checksum' < terraform-checksums.json)
-        echo "${CHECKSUM}  $(which terraform)" > terraform.sha256
+        if ${{ inputs.terraform_use_wrapper }} == "true"; 
+        then
+          echo "${CHECKSUM}  $(which terraform-bin)" > terraform.sha256
+        else
+          echo "${CHECKSUM}  $(which terraform)" > terraform.sha256
+        fi
         shasum --algorithm 256 --check terraform.sha256
     - name: 'lock-provider-file'
       shell: 'bash'

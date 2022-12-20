@@ -24,7 +24,7 @@ inputs:
     required: false
     default: './'
   terraform_use_wrapper:
-    description: 'All the setup-terraform action to install the wrapper'
+    description: 'Allow the setup-terraform action to install the wrapper'
     required: false
     default: 'true'
 
@@ -64,7 +64,7 @@ runs:
       shell: 'bash'
       run: |-
         CHECKSUM=$(jq -r --arg version ${{ inputs.terraform_version }} '.versions[] | select(.version==$version and .arch=="amd64" and .os=="linux") | .binary_checksum' < terraform-checksums.json)
-        if ${{ inputs.terraform_use_wrapper }} == "true"; 
+        if "${{ inputs.terraform_use_wrapper }}" = "true"; 
         then
           echo "${CHECKSUM}  $(which terraform-bin)" > terraform.sha256
         else

@@ -22,7 +22,7 @@ inputs:
   terraform_lockfile_location:
     description: 'Path to the directory containing the .terraform.lock.hcl file. This action will mark this file readonly to prevent terraform init calls from adding new providers.'
     required: false
-    default: './'
+    default: '.'
   terraform_use_wrapper:
     description: 'Allow the setup-terraform action to install the wrapper'
     required: false
@@ -37,7 +37,7 @@ runs:
     - name: 'download-artifacts'
       shell: 'bash'
       env:
-        RELEASE_VERSION: '0.2.2'
+        RELEASE_VERSION: '0.2.3'
         RELEASE_LOCATION: 'https://github.com/abcxyz/secure-setup-terraform/releases/download'
       run: |-
         curl -H "Authorization: token ${{ github.token }}" -LO "${{env.RELEASE_LOCATION}}/v${{env.RELEASE_VERSION}}/secure-setup-terraform_${{env.RELEASE_VERSION}}_linux_amd64.tar.gz"

@@ -19,15 +19,10 @@ inputs:
     description: 'The terraform version to install'
     default: '1.3.3'
     required: false
-  terraform_lockfile_location:
-    description: 'Path to the directory containing the .terraform.lock.hcl file. This action will mark this file readonly to prevent terraform init calls from adding new providers.'
-    required: false
-    default: '.'
   terraform_use_wrapper:
     description: 'Allow the setup-terraform action to install the wrapper'
     required: false
     default: 'true'
-
 
 runs:
   using: 'composite'
@@ -71,8 +66,3 @@ runs:
           echo "${CHECKSUM}  $(which terraform)" > terraform.sha256
         fi
         shasum --algorithm 256 --check terraform.sha256
-    - name: 'lock-provider-file'
-      shell: 'bash'
-      run: 'chmod 444 ${{ inputs.terraform_lockfile_location }}/.terraform.lock.hcl'
-
-

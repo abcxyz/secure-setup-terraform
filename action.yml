@@ -64,7 +64,7 @@ runs:
         tar xf secure-setup-terraform_${{env.RELEASE_VERSION}}_linux_${ARCH}.tar.gz
         
         # Verify the terraform binary checksum
-        CHECKSUM=$(jq -r --arg version ${{ inputs.terraform_version }} '.versions[] | select(.version==$version and .arch=="${ARCH}" and .os=="linux") | .binary_checksum' < terraform-checksums.json)
+        CHECKSUM=$(jq -r --arg version ${{ inputs.terraform_version }} '.versions[] | select(.version==$version and .arch=="'${ARCH}'" and .os=="linux") | .binary_checksum' < terraform-checksums.json)
 
         # The terraform wrapper installs the actual binary as terraform-bin, check 
         # for its existence and verify its checksum. Otherwise look for the default

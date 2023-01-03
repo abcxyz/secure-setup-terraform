@@ -30,19 +30,51 @@ inputs:
   cli_config_credentials_token:
     description: 'From setup-terraform: The API token for a Terraform Cloud/Enterprise instance to place within the credentials block of the Terraform CLI configuration file.'
     required: false
+  terraform_lockfile_location:
+    description: 'Path to the directory containing the .terraform.lock.hcl file. This action will mark this file readonly to prevent terraform init calls from adding new providers.'
+    required: false
+    default: '.'
 
 runs:
   using: 'composite'
   steps:
-    - name: 'download-artifacts'
+    - name: 'setup-terraform'
+      uses: 'hashicorp/setup-terraform@v2'
+      with:
+        terraform_version: '${{ inputs.terraform_version }}'
+        terraform_wrapper: '${{ inputs.terraform_wrapper }}'
+        cli_config_credentials_hostname: '${{ inputs.cli_config_credentials_hostname }}'
+        cli_config_credentials_token: '${{ inputs.cli_config_credentials_token }}'
+
+    - name: 'secure-terraform'
       shell: 'bash'
       env:
         RELEASE_VERSION: '0.2.3'
         RELEASE_LOCATION: 'https://github.com/abcxyz/secure-setup-terraform/releases/download'
       run: |-
-        curl -H "Authorization: token ${{ github.token }}" -LO "${{env.RELEASE_LOCATION}}/v${{env.RELEASE_VERSION}}/secure-setup-terraform_${{env.RELEASE_VERSION}}_linux_amd64.tar.gz"
+        ARCH="amd6";
+        if [ "${{runner.platform}}" = "ARM64" ];
+        then
+          ARCH="arm6"
+        fi
+
+        curl -H "Authorization: token ${{ github.token }}" -LO "${{env.RELEASE_LOCATION}}/v${{env.RELEASE_VERSION}}/secure-setup-terraform_${{env.RELEASE_VERSION}}_linux_${ARCH}.tar.gz"
         curl -H "Authorization: token ${{ github.token }}" -Lo terraform-checksums.json "${{env.RELEASE_LOCATION}}/v${{env.RELEASE_VERSION}}/secure-setup-terraform_${{env.RELEASE_VERSION}}_checksums.json"
-        tar xf secure-setup-terraform_${{env.RELEASE_VERSION}}_linux_amd64.tar.gz
+        tar xf secure-setup-terraform_${{env.RELEASE_VERSION}}_linux_${ARCH}.tar.gz
+        
+        # Verify the terraform binary checksum
+        CHECKSUM=$(jq -r --arg version ${{ inputs.terraform_version }} '.versions[] | select(.version==$version and .arch=="${ARCH}" and .os=="linux") | .binary_checksum' < terraform-checksums.json)
+
+        # The terraform wrapper installs the actual binary as terraform-bin, check 
+        # for its existence and verify its checksum. Otherwise look for the default
+        # terrafrom binary
+        if [ -f "$(which terraform-bin)" ];
+        then
+          echo "${CHECKSUM}  $(which terraform-bin)" > terraform.sha256
+        else
+          echo "${CHECKSUM}  $(which terraform)" > terraform.sha256
+        fi
+        shasum --algorithm 256 --check terraform.sha256
 
     # Recursively search for terraform files in the current repo and run a linter that fails when it finds calls to 'local-exec'
     - name: 'lint-terraform'
@@ -54,22 +86,7 @@ runs:
       shell: 'bash'
       run: ./lint-action ./.github/workflows
 
-    - name: 'setup-terraform'
-      uses: 'hashicorp/setup-terraform@v2'
-      with:
-        terraform_version: '${{ inputs.terraform_version }}'
-        terraform_wrapper: '${{ inputs.terraform_wrapper }}'
-        cli_config_credentials_hostname: '${{ inputs.cli_config_credentials_hostname }}'
-        cli_config_credentials_token: '${{ inputs.cli_config_credentials_token }}'
-    - 
-      name: 'verify-binary-checksum'
+    # Mark the provider file readonly so that new providers cannot be added during actuation
+    - name: 'lock-provider-file'
       shell: 'bash'
-      run: |-
-        CHECKSUM=$(jq -r --arg version ${{ inputs.terraform_version }} '.versions[] | select(.version==$version and .arch=="amd64" and .os=="linux") | .binary_checksum' < terraform-checksums.json)
-        if "${{ inputs.terraform_wrapper }}" = "true"; 
-        then
-          echo "${CHECKSUM}  $(which terraform-bin)" > terraform.sha256
-        else
-          echo "${CHECKSUM}  $(which terraform)" > terraform.sha256
-        fi
-        shasum --algorithm 256 --check terraform.sha256
+      run: 'chmod 444 ${{ inputs.terraform_lockfile_location }}/.terraform.lock.hcl'

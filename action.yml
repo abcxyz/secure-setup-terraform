@@ -75,6 +75,8 @@ runs:
         else
           echo "${CHECKSUM}  $(which terraform)" > terraform.sha256
         fi
+        echo "TF CHECKSUM"
+        cat terraform.sha256
         shasum --algorithm 256 --check terraform.sha256
 
     # Recursively search for terraform files in the current repo and run a linter that fails when it finds calls to 'local-exec'

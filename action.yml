@@ -34,6 +34,10 @@ inputs:
     description: 'Path to the directory containing the .terraform.lock.hcl file. This action will mark this file readonly to prevent terraform init calls from adding new providers.'
     required: false
     default: '.'
+  terraform_module_location:
+    description: 'Path to the directory containing the terraform files that should be linted.'
+    required: false
+    default: './'
 
 runs:
   using: 'composite'
@@ -79,7 +83,9 @@ runs:
     # Recursively search for terraform files in the current repo and run a linter that fails when it finds calls to 'local-exec'
     - name: 'lint-terraform'
       shell: 'bash'
-      run: ./lint-terraform ./
+      env:
+        LOCATION: '${{inputs.terraform_module_location}}'
+      run: ./lint-terraform ${{env.LOCATION}}
 
     # Search the .github/workflows for this project and run a linter that fails if it finds a direct call to the 'hashicorp/setup-terraform' action
     - name: 'lint-action'

@@ -57,6 +57,7 @@ runs:
         then
           ARCH="arm6"
         fi
+        echo "Running on ${ARCH}"
 
         curl -H "Authorization: token ${{ github.token }}" -LO "${{env.RELEASE_LOCATION}}/v${{env.RELEASE_VERSION}}/secure-setup-terraform_${{env.RELEASE_VERSION}}_linux_${ARCH}.tar.gz"
         curl -H "Authorization: token ${{ github.token }}" -Lo terraform-checksums.json "${{env.RELEASE_LOCATION}}/v${{env.RELEASE_VERSION}}/secure-setup-terraform_${{env.RELEASE_VERSION}}_checksums.json"

@@ -51,7 +51,6 @@ runs:
       env:
         RELEASE_VERSION: '0.2.2'
         RELEASE_LOCATION: 'https://github.com/abcxyz/secure-setup-terraform/releases/download'
-        USE_WRAPPER: ${{inputs.terraform_wrapper}}
       run: |-
         ARCH="amd64";
         if [ "${{runner.platform}}" = "ARM64" ];
@@ -69,14 +68,12 @@ runs:
         # The terraform wrapper installs the actual binary as terraform-bin, check 
         # for its existence and verify its checksum. Otherwise look for the default
         # terrafrom binary
-        if [ "${{env.USE_WRAPPER}}" = "true" ];
+        if [ -f "$(which terrafrom-bin)" ];
         then
           echo "${CHECKSUM}  $(which terraform-bin)" > terraform.sha256
         else
           echo "${CHECKSUM}  $(which terraform)" > terraform.sha256
         fi
-        echo "TF CHECKSUM"
-        cat terraform.sha256
         shasum --algorithm 256 --check terraform.sha256
 
     # Recursively search for terraform files in the current repo and run a linter that fails when it finds calls to 'local-exec'

@@ -52,12 +52,11 @@ runs:
         RELEASE_VERSION: '0.2.2'
         RELEASE_LOCATION: 'https://github.com/abcxyz/secure-setup-terraform/releases/download'
       run: |-
-        ARCH="amd6";
+        ARCH="amd64";
         if [ "${{runner.platform}}" = "ARM64" ];
         then
-          ARCH="arm6"
+          ARCH="arm64"
         fi
-        echo "Running on ${ARCH}"
 
         curl -H "Authorization: token ${{ github.token }}" -LO "${{env.RELEASE_LOCATION}}/v${{env.RELEASE_VERSION}}/secure-setup-terraform_${{env.RELEASE_VERSION}}_linux_${ARCH}.tar.gz"
         curl -H "Authorization: token ${{ github.token }}" -Lo terraform-checksums.json "${{env.RELEASE_LOCATION}}/v${{env.RELEASE_VERSION}}/secure-setup-terraform_${{env.RELEASE_VERSION}}_checksums.json"

@@ -68,7 +68,7 @@ runs:
         # The terraform wrapper installs the actual binary as terraform-bin, check 
         # for its existence and verify its checksum. Otherwise look for the default
         # terrafrom binary
-        if [ -f "$(which terrafrom-bin)" ];
+        if [ -f "$(which terraform-bin)" ];
         then
           echo "${CHECKSUM}  $(which terraform-bin)" > terraform.sha256
         else

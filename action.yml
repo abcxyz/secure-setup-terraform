@@ -98,6 +98,6 @@ runs:
 
     # Mark the provider file readonly so that new providers cannot be added during actuation
     - name: 'lock-provider-file'
-      if: ${{ inputs.protect_lockfile }} == 'true'
+      if: ${{ inputs.protect_lockfile == 'true' }}
       shell: 'bash'
       run: 'chmod 444 ${{ inputs.terraform_lockfile_location }}/.terraform.lock.hcl'

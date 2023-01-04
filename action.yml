@@ -38,6 +38,10 @@ inputs:
     description: 'Path to the directory containing the terraform files that should be linted.'
     required: false
     default: './'
+  protect_lockfile:
+    description: 'When true, enables the step that marks the lock file readonly so that no provider updates can occur.'
+    required: false
+    default: 'true'
 
 runs:
   using: 'composite'
@@ -94,5 +98,6 @@ runs:
 
     # Mark the provider file readonly so that new providers cannot be added during actuation
     - name: 'lock-provider-file'
+      if: ${{ inputs.protect_lockfile }} == 'true'
       shell: 'bash'
       run: 'chmod 444 ${{ inputs.terraform_lockfile_location }}/.terraform.lock.hcl'

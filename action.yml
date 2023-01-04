@@ -34,6 +34,14 @@ inputs:
     description: 'Path to the directory containing the .terraform.lock.hcl file. This action will mark this file readonly to prevent terraform init calls from adding new providers.'
     required: false
     default: '.'
+  terraform_module_location:
+    description: 'Path to the directory containing the terraform files that should be linted.'
+    required: false
+    default: './'
+  protect_lockfile:
+    description: 'When true, enables the step that marks the lock file readonly so that no provider updates can occur.'
+    required: false
+    default: 'true'
 
 runs:
   using: 'composite'
@@ -68,7 +76,7 @@ runs:
         # The terraform wrapper installs the actual binary as terraform-bin, check 
         # for its existence and verify its checksum. Otherwise look for the default
         # terrafrom binary
-        if [ -f "$(which terrafrom-bin)" ];
+        if [ -f "$(which terraform-bin)" ];
         then
           echo "${CHECKSUM}  $(which terraform-bin)" > terraform.sha256
         else
@@ -79,7 +87,9 @@ runs:
     # Recursively search for terraform files in the current repo and run a linter that fails when it finds calls to 'local-exec'
     - name: 'lint-terraform'
       shell: 'bash'
-      run: ./lint-terraform ./
+      env:
+        LOCATION: '${{inputs.terraform_module_location}}'
+      run: ./lint-terraform ${{env.LOCATION}}
 
     # Search the .github/workflows for this project and run a linter that fails if it finds a direct call to the 'hashicorp/setup-terraform' action
     - name: 'lint-action'
@@ -88,5 +98,6 @@ runs:
 
     # Mark the provider file readonly so that new providers cannot be added during actuation
     - name: 'lock-provider-file'
+      if: ${{ inputs.protect_lockfile == 'true' }}
       shell: 'bash'
       run: 'chmod 444 ${{ inputs.terraform_lockfile_location }}/.terraform.lock.hcl'

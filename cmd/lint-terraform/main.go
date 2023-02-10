@@ -67,5 +67,8 @@ func realMain() error {
 		return fmt.Errorf("expected at least one argument, got %d", got)
 	}
 
-	return linter.RunLinter(ctx, args, &linter.TerraformLinter{})
+	if err := linter.RunLinter(ctx, args, &linter.TerraformLinter{}); err != nil {
+		return fmt.Errorf("error running linter %w", err)
+	}
+	return nil
 }

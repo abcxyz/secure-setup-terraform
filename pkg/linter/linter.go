@@ -92,7 +92,7 @@ func lint(path string, linter Linter) ([]*ViolationInstance, error) {
 				}
 				results, err := linter.FindViolations(content, path)
 				if err != nil {
-					return nil, err
+					return nil, fmt.Errorf("error searching for violations %w", err)
 				}
 				instances = append(instances, results...)
 			}
@@ -104,7 +104,7 @@ func lint(path string, linter Linter) ([]*ViolationInstance, error) {
 func isDirectory(path string) (bool, error) {
 	fileInfo, err := os.Stat(path)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("error reading file information %w", err)
 	}
 	return fileInfo.IsDir(), err
 }

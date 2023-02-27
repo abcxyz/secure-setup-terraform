@@ -32,19 +32,22 @@ jobs:
       # Generate updates to the checksum file if there are new released versions of terraform
       - id: 'generate-updates'
         run: './.github/generate_version_checksums.sh $GITHUB_WORKSPACE/terraform-checksums.json;'
+      # Generate a token that has permission to author a pull request
       - id: 'mint-token'
-        uses: 'abcxyz/github-token-minter/.github/actions/mint-token@5e591a16aaa83eb0d1152b557db9fa683f2c8281'
+        if: '${{ env.CHANGES }}'
+        uses: 'abcxyz/github-token-minter/.github/actions/mint-token@4e83d0b3f01f2b084dbbd3c6da07b29a2c032c6e'
         with:
-          wif_provider: ${{ vars.GHTM_WIF_PROVIDER }}
-          wif_service_account: ${{ vars.GHTM_WIF_SERVICE_ACCOUNT }}
-          service_audience: ${{ vars.GHTM_SERVICE_AUDIENCE }}
-          service_url: ${{ vars.GHTM_SERVICE_URL }}
+          wif_provider: '${{ vars.GHTM_WIF_PROVIDER }}'
+          wif_service_account: '${{ vars.GHTM_WIF_SERVICE_ACCOUNT }}'
+          service_audience: '${{ vars.GHTM_SERVICE_AUDIENCE }}'
+          service_url: '${{ vars.GHTM_SERVICE_URL }}'
+          requested_permissions: '{"repositories":["abcxyz/secure-setup-terraform"],"permissions":{"pull_request":"write"}}'
       # Create a pull request for review
       - id: 'create-pull-request'
-        if: ${{ env.CHANGES }}
-        uses: peter-evans/create-pull-request@b4d51739f96fca8047ad065eccef63442d8e99f7 # ratchet:peter-evans/create-pull-request@v4
+        if: '${{ env.CHANGES }}'
+        uses: 'peter-evans/create-pull-request@b4d51739f96fca8047ad065eccef63442d8e99f7' # ratchet:peter-evans/create-pull-request@v4
         with:
-          token: ${{ steps.mint-token.outputs.token }}
+          token: '${{ steps.mint-token.outputs.token }}'
           add-paths: 'terraform-checksums.json'
           commit-message: 'chore: [automated] checksum updates'
           committer: 'abcxyz bot <abcxyz-token-minter-github-app@google.com>'

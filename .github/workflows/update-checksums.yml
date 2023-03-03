@@ -41,7 +41,7 @@ jobs:
           wif_service_account: '${{ vars.GHTM_WIF_SERVICE_ACCOUNT }}'
           service_audience: '${{ vars.GHTM_SERVICE_AUDIENCE }}'
           service_url: '${{ vars.GHTM_SERVICE_URL }}'
-          requested_permissions: '{"repositories":["abcxyz/secure-setup-terraform"],"permissions":{"pull_request":"write"}}'
+          requested_permissions: '{"repositories":["secure-setup-terraform"],"permissions":{"pull_request":"write"}}'
       # Create a pull request for review
       - id: 'create-pull-request'
         if: '${{ env.CHANGES }}'

@@ -67,9 +67,9 @@ runs:
         fi
 
         curl -H "Authorization: token ${{ github.token }}" -LO "${{env.RELEASE_LOCATION}}/v${{env.RELEASE_VERSION}}/secure-setup-terraform_${{env.RELEASE_VERSION}}_linux_${ARCH}.tar.gz"
-        curl -H "Authorization: token ${{ github.token }}" -Lo terraform-checksums.json "${{env.RELEASE_LOCATION}}/v${{env.RELEASE_VERSION}}/secure-setup-terraform_${{env.RELEASE_VERSION}}_checksums.json"
+        curl -Lo terraform-checksums.json "https://raw.githubusercontent.com/abcxyz/secure-setup-terraform/main/terraform-checksums.json"
         tar xf secure-setup-terraform_${{env.RELEASE_VERSION}}_linux_${ARCH}.tar.gz
-        
+
         # Verify the terraform binary checksum
         CHECKSUM=$(jq -r --arg version ${{ inputs.terraform_version }} '.versions[] | select(.version==$version and .arch=="'${ARCH}'" and .os=="linux") | .binary_checksum' < terraform-checksums.json)
 

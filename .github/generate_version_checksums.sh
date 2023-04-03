@@ -73,7 +73,7 @@ do
             bin_sum=$(shasum -a 256 terraform | cut -d' ' -f1);
 
             version_info=$(jq -c -n --arg version "${version}" --arg archive_checksum "${arch_sum}" --arg binary_checksum "${bin_sum}" --arg os "linux" --arg arch "${arch}" '$ARGS.named');
-            jq -c --argjson version_info "${version_info}" '.versions += [$version_info]' < "${checksum_file}" > updated.json;
+            jq --argjson version_info "${version_info}" '.versions += [$version_info]' < "${checksum_file}" > updated.json;
             mv updated.json "${checksum_file}";
 
         done;

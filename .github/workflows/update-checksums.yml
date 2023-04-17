@@ -50,6 +50,8 @@ jobs:
           token: '${{ steps.mint-token.outputs.token }}'
           add-paths: 'terraform-checksums.json'
           commit-message: 'chore: [automated] checksum updates'
+          committer: 'Token Minter <abcxyz-token-minter-github-app@google.com>'
+          author: 'Token Minter <abcxyz-token-minter-github-app@google.com>'
           delete-branch: true
           branch: '${{ env.PR_BRANCH }}'
           title: 'chore: Terraform checksum updates for ${{ env.UPDATE_DATE }}'

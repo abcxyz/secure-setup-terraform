@@ -92,7 +92,7 @@ then
 
     {
         echo "CHANGES=${change_count}";
-        echo "PR_BRANCH=update-checksums-${change_date}";
+        echo "PR_BRANCH=automation/update-checksums-${change_date}";
         echo "UPDATE_DATE=${change_date}";
         echo "VERSIONS=${versions}";
     } >> "${GITHUB_ENV}";

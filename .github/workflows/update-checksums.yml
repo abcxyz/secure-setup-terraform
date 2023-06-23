@@ -77,7 +77,7 @@ jobs:
               return existingRef.object.sha;
             } catch (err) {
               if (err.status !== 404) {
-                core.setFailed("Failed to get existing pull request reference: ${err}");
+                core.setFailed(`Failed to get existing pull request reference: ${err}`);
                 core.error(err);
                 process.exit(1);
               }
@@ -94,7 +94,7 @@ jobs:
                 `
               );
 
-              const newRef = await github.rest.git.createRef({
+              const { data: newRef } = await github.rest.git.createRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 ref: pullRequestFullRef,
@@ -104,7 +104,7 @@ jobs:
               return newRef.object.sha;
             } catch (err) {
               core.setFailed(
-                "Failed to create/update pull request branch reference: ${err}"
+                `Failed to create/update pull request branch reference: ${err}`
               );
               core.error(err);
             }
@@ -190,7 +190,7 @@ jobs:
               });
             } catch (err) {
               core.error(err);
-              core.setFailed("Failed to create commits for pull request branch: ${err}");
+              core.setFailed(`Failed to create commits for pull request branch: ${err}`);
             }
 
       - name: 'Create/Update Pull Request'

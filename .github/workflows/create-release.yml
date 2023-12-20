@@ -36,10 +36,10 @@ jobs:
         id: "mint-token"
         uses: "abcxyz/github-token-minter/.github/actions/mint-token@4cdad179cc950bd35ed940bd4affeaa9cc95a4bc" # ratchet:abcxyz/github-token-minter/.github/actions/mint-token@main
         with:
-          wif_provider: "${{ inputs.token_minter_wif_provider }}"
-          wif_service_account: "${{ inputs.token_minter_wif_service_account }}"
-          service_audience: "${{ inputs.token_minter_service_audience }}"
-          service_url: "${{ inputs.token_minter_service_url }}"
+          wif_provider: '${{ vars.TOKEN_MINTER_WIF_PROVIDER }}'
+          wif_service_account: '${{ vars.TOKEN_MINTER_WIF_SERVICE_ACCOUNT }}'
+          service_audience: '${{ vars.TOKEN_MINTER_SERVICE_AUDIENCE }}'
+          service_url: '${{ vars.TOKEN_MINTER_SERVICE_URL }}'
           requested_permissions: |-
             {
               "repositories": ["${{ github.event.repository.name }}"],

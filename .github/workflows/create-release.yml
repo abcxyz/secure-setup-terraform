@@ -68,5 +68,15 @@ jobs:
               message: tag,
             });
             core.info(JSON.stringify(result))
+            
+            // Create a reference for annotated tag. See reference:
+            // https://docs.github.com/en/rest/git/tags?apiVersion=2022-11-28#create-a-tag-object
+            const result2 = await github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `refs/tags/${tag}`,
+                sha: sha,
+            })
+            core.info(JSON.stringify(result2))
 
             return `Created release tag (${tag}) @ commit (${sha}).`

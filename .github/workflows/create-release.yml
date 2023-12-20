@@ -1,0 +1,71 @@
+name: "create-release"
+
+on:
+  push:
+    branches:
+      - "main"
+
+permissions:
+  contents: "write"
+  id-token: "write"
+
+# only one release should run at a time
+concurrency:
+  group: "${{ github.workflow_ref }}"
+
+jobs:
+  read_version:
+    runs-on: "ubuntu-latest"
+    if: "${{ github.event.head_commit.message == 'chore: [automated] checksum updates' }}"
+    outputs:
+      version: "${{ steps.version.outputs.version }}"
+    steps:
+      - id: "checkout"
+        uses: "actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8" # ratchet:actions/checkout@v3
+      - id: "version"
+        run: echo version=$(cat VERSION) >> "${GITHUB_ENV}"
+  create-tag:
+    runs-on: "ubuntu-latest"
+    needs: "read_version"
+    # Only running the job when the triggering branch is the default branch.
+    if: "${{ github.ref_name == github.event.repository.default_branch }}"
+    outputs:
+      result: "${{ steps.create-tag.outputs.result }}"
+    steps:
+      - name: "Mint Token"
+        id: "mint-token"
+        uses: "abcxyz/github-token-minter/.github/actions/mint-token@4cdad179cc950bd35ed940bd4affeaa9cc95a4bc" # ratchet:abcxyz/github-token-minter/.github/actions/mint-token@main
+        with:
+          wif_provider: "${{ inputs.token_minter_wif_provider }}"
+          wif_service_account: "${{ inputs.token_minter_wif_service_account }}"
+          service_audience: "${{ inputs.token_minter_service_audience }}"
+          service_url: "${{ inputs.token_minter_service_url }}"
+          requested_permissions: |-
+            {
+              "repositories": ["${{ github.event.repository.name }}"],
+              "permissions": {
+                "contents": "write"
+              }
+            }
+      - id: "create-tag"
+        env:
+          TAG: "v${{ needs.read_version.outputs.version }}"
+        uses: "actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410" # ratchet:actions/github-script@v6
+        with:
+          github-token: "${{ steps.mint-token.outputs.token }}"
+          retries: "3"
+          result-encoding: "string"
+          script: |+
+            const tag = process.env.TAG
+            const sha = '${{ github.sha }}'
+
+            await github.rest.git.createTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: tag,
+              object: sha,
+              type: 'commit',
+              message: tag,
+            });
+
+            return `Created release tag (${tag}) @ commit (${sha}).`

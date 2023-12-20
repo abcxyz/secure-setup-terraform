@@ -59,7 +59,7 @@ jobs:
             const tag = process.env.TAG
             const sha = '${{ github.sha }}'
 
-            await github.rest.git.createTag({
+            const result = await github.rest.git.createTag({
               owner: context.repo.owner,
               repo: context.repo.repo,
               tag: tag,
@@ -67,5 +67,6 @@ jobs:
               type: 'commit',
               message: tag,
             });
+            core.info(JSON.stringify(result))
 
             return `Created release tag (${tag}) @ commit (${sha}).`

@@ -13,10 +13,12 @@
 # limitations under the License.
 
 name: 'update-checksums-file'
+
 on:
   workflow_dispatch:
   schedule:
     - cron: '0 0 */1 * *'
+
 jobs:
   update-checksums:
     permissions:
@@ -29,11 +31,13 @@ jobs:
     steps:
       - name: 'Checkout'
         id: 'checkout'
-        uses: 'actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8' # ratchet:actions/checkout@v3
+        uses: 'actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11' # ratchet:actions/checkout@v4
+
       # Generate updates to the checksum file if there are new released versions of terraform
       - name: 'Generate Updates'
         id: 'generate-updates'
         run: './.github/generate_version_checksums.sh $GITHUB_WORKSPACE/terraform-checksums.json;'
+
       # Generate a token that has permission to author a pull request
       - name: 'Mint Token'
         id: 'mint-token'
@@ -44,217 +48,27 @@ jobs:
           wif_service_account: '${{ vars.TOKEN_MINTER_WIF_SERVICE_ACCOUNT }}'
           service_audience: '${{ vars.TOKEN_MINTER_SERVICE_AUDIENCE }}'
           service_url: '${{ vars.TOKEN_MINTER_SERVICE_URL }}'
-          requested_permissions: '{"repositories":["secure-setup-terraform"],"permissions":{"pull_requests":"write","contents":"write"}}'
-      # Create a pull request branch using the GitHub API
-      - name: 'Create/Update Pull Request Branch'
-        id: 'create-branch-ref'
-        if: '${{ env.CHANGES }}'
-        uses: 'actions/github-script@98814c53be79b1d30f795b907e553d8679345975' # ratchet:actions/github-script@v6
-        with:
-          github-token: '${{ steps.mint-token.outputs.token }}'
-          result-encoding: 'string'
-          retries: '3'
-          script: |-
-            const githubSHA = "${{ github.sha }}";
-            const pullRequestPartialRef = `heads/${process.env.PR_BRANCH}`;
-            const pullRequestFullRef = `refs/${pullRequestPartialRef}`;
-
-            try {
-              core.info(
-                `Checking for existing pull request reference:
-                owner: ${context.repo.owner}
-                repo:  ${context.repo.repo}
-                ref:   ${pullRequestPartialRef}
-                `
-              );
-
-              const { data: existingRef } = await github.rest.git.getRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: pullRequestPartialRef,
-              });
-
-              return existingRef.object.sha;
-            } catch (err) {
-              if (err.status !== 404) {
-                core.setFailed(`Failed to get existing pull request reference: ${err}`);
-                core.error(err);
-                process.exit(1);
+          requested_permissions: |-
+            {
+              "repositories": ["secure-setup-terraform"],
+              "permissions": {
+                "pull_requests": "write",
+                "contents": "write"
               }
-              core.info("Existing pull request reference not found");
             }
 
-            try {
-              core.info(
-                `Creating new pull request reference:
-                owner: ${context.repo.owner}
-                repo:  ${context.repo.repo}
-                ref:   ${pullRequestFullRef}
-                sha:   ${githubSHA}
-                `
-              );
-
-              const { data: newRef } = await github.rest.git.createRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: pullRequestFullRef,
-                sha: githubSHA,
-              });
-
-              return newRef.object.sha;
-            } catch (err) {
-              core.setFailed(
-                `Failed to create/update pull request branch reference: ${err}`
-              );
-              core.error(err);
-            }
-
-      # Create a pull request for review
-      # Use the GitHub API to ensure commits are signed
-      - name: 'Create Commits'
-        id: 'create-commits'
-        if: '${{ env.CHANGES }}'
-        uses: 'actions/github-script@98814c53be79b1d30f795b907e553d8679345975' # ratchet:actions/github-script@v6
-        with:
-          github-token: '${{ steps.mint-token.outputs.token }}'
-          retries: '3'
-          script: |-
-            try {
-              const fs = require("fs/promises");
-
-              const githubWorkspace = "${{ github.workspace }}";
-              const githubSHA = "${{ github.sha }}";
-
-              const parentSHA = "${{ steps.create-branch-ref.outputs.result }}";
-              const pullRequestPartialRef = `heads/${process.env.PR_BRANCH}`;
-              const pullRequestFullRef = `refs/${pullRequestPartialRef}`;
-
-              core.info(`Creating new tree:
-                owner:     ${context.repo.owner}
-                repo:      ${context.repo.repo}
-                base_tree: ${githubSHA}
-              `);
-
-              // read the file content
-              const checksumFilePath = `${githubWorkspace}/terraform-checksums.json`;
-              const content = await fs.readFile(checksumFilePath, { encoding: "utf8" });
-
-              // create new git tree from the pr branch
-              const { data: tree } = await github.rest.git.createTree({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                base_tree: githubSHA,
-                tree: [
-                  {
-                    path: "terraform-checksums.json",
-                    mode: "100644",
-                    type: "blob",
-                    content: content,
-                  },
-                ],
-              });
-
-              core.debug("tree: ", tree);
-
-              core.info(`Creating new commit:
-                owner:   ${context.repo.owner}
-                repo:    ${context.repo.repo}
-                parents: ${parentSHA}
-                tree:    ${tree.sha}
-              `);
-
-              // create a commit from on the git tree
-              const { data: commit } = await github.rest.git.createCommit({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                message: "chore: [automated] checksum updates",
-                parents: [parentSHA],
-                tree: tree.sha,
-              });
-
-              core.debug("commit: ", commit);
-
-              core.info(`Updating PR branch ref
-                owner: ${context.repo.owner}
-                repo:  ${context.repo.repo}
-                ref:   ${pullRequestPartialRef}
-                sha:   ${commit.sha}
-              `);
-
-              // update the pr branch reference with the new git tree
-              await github.rest.git.updateRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: pullRequestPartialRef,
-                sha: commit.sha,
-              });
-            } catch (err) {
-              core.error(err);
-              core.setFailed(`Failed to create commits for pull request branch: ${err}`);
-            }
-
+      # Create a pull request with updated files
       - name: 'Create/Update Pull Request'
-        id: 'create-update-pull-request'
         if: '${{ env.CHANGES }}'
-        uses: 'actions/github-script@98814c53be79b1d30f795b907e553d8679345975' # ratchet:actions/github-script@v6
+        uses: 'abcxyz/pkg/.github/actions/create-pull-request@main' # ratchet:exclude
         with:
-          github-token: '${{ steps.mint-token.outputs.token }}'
-          retries: '3'
-          script: |-
-            try {
-              const headRef = process.env.PR_BRANCH;
-              const baseRef = "${{ github.ref_name }}";
-
-              const listResponse = await github.rest.pulls.list({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                state: "open",
-                head: context.repo.owner + ":" + process.env.PR_BRANCH,
-                base: process.env.DEFAULT_BRANCH,
-              });
-
-              core.debug(`listResponse: ${listResponse}`);
-
-              if (!listResponse.data.length) {
-                core.info(`Creating pull request:
-                  owner: ${context.repo.owner}
-                  repo:  ${context.repo.repo}
-                  head:  ${headRef}
-                  base:  ${baseRef}
-                `);
-
-                const createResponse = await github.rest.pulls.create({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  head: headRef,
-                  base: baseRef,
-                  title: `chore: [automated] Terraform checksum updates for ${process.env.UPDATE_DATE}`,
-                  body: `Adds Terraform binary checksums for ${process.env.CHANGES} versions: ${process.env.VERSIONS}`,
-                });
-
-                core.info(
-                  `Created PR #${createResponse.data.number} at ${createResponse.data.html_url}`
-                );
-              } else {
-                core.info(`Updating pull request: 
-                  owner:       ${context.repo.owner}
-                  repo:        ${context.repo.repo}
-                  pull_number: ${listResponse.data[0].number}
-                `);
-
-                const updateResponse = await github.rest.pulls.update({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  pull_number: listResponse.data[0].number,
-                  title: `chore: [automated] Terraform checksum updates for ${process.env.UPDATE_DATE}`,
-                  body: `Adds Terraform binary checksums for ${process.env.CHANGES} versions: ${process.env.VERSIONS}`,
-                });
-
-                core.info(
-                  `Updated PR #${updateResponse.data.number} at ${updateResponse.data.html_url}`
-                );
-              }
-            } catch (err) {
-              core.error(err);
-              core.setFailed(`Failed to create/update pull request: ${err}`);
-            }
+          token: '${{ steps.mint-token.outputs.token }}'
+          base_branch: '${{ github.event.repository.default_branch }}'
+          head_branch: '${{ env.PR_BRANCH }}' # set via mint-token step
+          title: 'chore: [automated] Terraform checksum updates for ${{ env.UPDATE_DATE }}' # set via mint-token step
+          body: 'Adds Terraform binary checksums for ${process.env.CHANGES} versions: ${{ env.VERSIONS }}' # set via mint-token step
+          changed_paths: |-
+            [
+              "terraform-checksums.json",
+              "VERSION"
+            ]

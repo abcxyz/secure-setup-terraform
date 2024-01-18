@@ -228,7 +228,7 @@ jobs:
                   repo: context.repo.repo,
                   head: headRef,
                   base: baseRef,
-                  title: `chore: Terraform checksum updates for ${process.env.UPDATE_DATE}`,
+                  title: `chore: [automated] Terraform checksum updates for ${process.env.UPDATE_DATE}`,
                   body: `Adds Terraform binary checksums for ${process.env.CHANGES} versions: ${process.env.VERSIONS}`,
                 });
 
@@ -246,7 +246,7 @@ jobs:
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   pull_number: listResponse.data[0].number,
-                  title: `chore: Terraform checksum updates for ${process.env.UPDATE_DATE}`,
+                  title: `chore: [automated] Terraform checksum updates for ${process.env.UPDATE_DATE}`,
                   body: `Adds Terraform binary checksums for ${process.env.CHANGES} versions: ${process.env.VERSIONS}`,
                 });
 

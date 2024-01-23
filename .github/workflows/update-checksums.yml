@@ -69,6 +69,7 @@ jobs:
           body: 'Adds Terraform binary checksums for ${process.env.CHANGES} versions: ${{ env.VERSIONS }}' # set via mint-token step
           changed_paths: |-
             [
+              "action.yml",
               "terraform-checksums.json",
               "VERSION"
             ]

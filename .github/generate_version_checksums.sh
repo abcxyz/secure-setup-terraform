@@ -94,7 +94,7 @@ then
     versions=$(cat ${added_file} | tr '\n' ',' | sed 's/,*$//g');
 
     release_version=$(awk -F. -v OFS=. 'NF==1{print ++$NF}; NF>1{$NF=sprintf("%0*d", length($NF), ($NF+1)); print}' <"${version_file}")
-    sed -i '' "s/RELEASE_VERSION: '.*'/RELEASE_VERSION: '${release_version}'/g" "${action_file}"
+    sed -i "s/RELEASE_VERSION: '.*'/RELEASE_VERSION: '${release_version}'/g" "${action_file}"
     echo "${release_version}" >"${version_file}"
 
     {

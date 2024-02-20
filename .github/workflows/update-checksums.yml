@@ -42,7 +42,7 @@ jobs:
       - name: 'Mint Token'
         id: 'mint-token'
         if: '${{ env.CHANGES }}'
-        uses: 'abcxyz/github-token-minter/.github/actions/mint-token@4e83d0b3f01f2b084dbbd3c6da07b29a2c032c6e'
+        uses: 'abcxyz/github-token-minter/.github/actions/mint-token@main' # ratchet:exclude
         with:
           wif_provider: '${{ vars.TOKEN_MINTER_WIF_PROVIDER }}'
           wif_service_account: '${{ vars.TOKEN_MINTER_WIF_SERVICE_ACCOUNT }}'

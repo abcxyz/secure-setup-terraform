@@ -64,7 +64,7 @@ jobs:
         with:
           token: '${{ steps.mint-token.outputs.token }}'
           base_branch: '${{ github.event.repository.default_branch }}'
-          head_branch: '${{ env.PR_BRANCH }}' # set via mint-token step
+          head_branch: '${{ env.PR_BRANCH }}' # set via generate-updates step
           title: 'chore: [automated] Terraform checksum updates for ${{ env.UPDATE_DATE }}' # set via mint-token step
           body: 'Adds Terraform binary checksums for ${{ env.CHANGES }} versions: ${{ env.VERSIONS }}' # set via mint-token step
           changed_paths: |-

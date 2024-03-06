@@ -69,11 +69,11 @@ runs:
         curl -H "Authorization: token ${{ github.token }}" -LO "${{env.RELEASE_LOCATION}}/v${{env.RELEASE_VERSION}}/secure-setup-terraform_${{env.RELEASE_VERSION}}_linux_${ARCH}.tar.gz"
         curl -H "Authorization: token ${{ github.token }}" -Lo terraform-checksums.json "${{env.RELEASE_LOCATION}}/v${{env.RELEASE_VERSION}}/secure-setup-terraform_${{env.RELEASE_VERSION}}_checksums.json"
         tar xf secure-setup-terraform_${{env.RELEASE_VERSION}}_linux_${ARCH}.tar.gz
-        
+
         # Verify the terraform binary checksum
         CHECKSUM=$(jq -r --arg version ${{ inputs.terraform_version }} '.versions[] | select(.version==$version and .arch=="'${ARCH}'" and .os=="linux") | .binary_checksum' < terraform-checksums.json)
 
-        # The terraform wrapper installs the actual binary as terraform-bin, check 
+        # The terraform wrapper installs the actual binary as terraform-bin, check
         # for its existence and verify its checksum. Otherwise look for the default
         # terrafrom binary
         if [ -f "$(which terraform-bin)" ];
@@ -89,15 +89,19 @@ runs:
       shell: 'bash'
       env:
         LOCATION: '${{inputs.terraform_module_location}}'
-      run: ./lint-terraform ${{env.LOCATION}}
+      run: |-
+        ./lint-terraform ${{env.LOCATION}}
 
     # Search the .github/workflows for this project and run a linter that fails if it finds a direct call to the 'hashicorp/setup-terraform' action
     - name: 'lint-action'
       shell: 'bash'
-      run: ./lint-action ./.github/workflows
+      run: |-
+        ./lint-action ./.github/workflows
 
     # Mark the provider file readonly so that new providers cannot be added during actuation
     - name: 'lock-provider-file'
-      if: ${{ inputs.protect_lockfile == 'true' }}
+      if: |-
+        ${{ inputs.protect_lockfile == 'true' }}
       shell: 'bash'
-      run: 'chmod 444 ${{ inputs.terraform_lockfile_location }}/.terraform.lock.hcl'
+      run: |-
+        chmod 444 ${{ inputs.terraform_lockfile_location }}/.terraform.lock.hcl

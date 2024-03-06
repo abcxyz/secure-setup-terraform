@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-project_name: secure-setup-terraform
+project_name: 'secure-setup-terraform'
 
 env:
   # Global env vars for go build
@@ -80,7 +80,7 @@ checksum:
   name_template: '{{ .ProjectName }}_{{ .Version }}_SHA512SUMS'
   algorithm: 'sha512'
   extra_files:
-    - glob: terraform-checksums.json
+    - glob: 'terraform-checksums.json'
       name_template: '{{ .ProjectName }}_{{ .Version }}_checksums.json'
 
 changelog:
@@ -91,6 +91,5 @@ release:
   draft: false
   mode: 'replace'
   extra_files:
-    - glob: terraform-checksums.json
+    - glob: 'terraform-checksums.json'
       name_template: '{{ .ProjectName }}_{{ .Version }}_checksums.json'
-

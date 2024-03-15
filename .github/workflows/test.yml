@@ -32,7 +32,7 @@ jobs:
     uses: 'abcxyz/pkg/.github/workflows/yaml-lint.yml@main' # ratchet:exclude
 
   go_lint:
-    uses: 'abcxyz/pkg/.github/workflows/go-lint.yml@e8ce6e3f1af546bb30008af2322b1fd6dd62c1e2' # ratchet:abcxyz/pkg/.github/workflows/go-lint.yml@main
+    uses: 'abcxyz/pkg/.github/workflows/go-lint.yml@cec59ae65591e7f2293aba3c50a8cb19076269c0' # ratchet:abcxyz/pkg/.github/workflows/go-lint.yml@main
 
   go_test:
-    uses: 'abcxyz/pkg/.github/workflows/go-test.yml@e8ce6e3f1af546bb30008af2322b1fd6dd62c1e2' # ratchet:abcxyz/pkg/.github/workflows/go-test.yml@main
+    uses: 'abcxyz/pkg/.github/workflows/go-test.yml@cec59ae65591e7f2293aba3c50a8cb19076269c0' # ratchet:abcxyz/pkg/.github/workflows/go-test.yml@main

@@ -57,7 +57,7 @@ runs:
     - name: 'secure-terraform'
       shell: 'bash'
       env:
-        RELEASE_VERSION: '0.3.7'
+        RELEASE_VERSION: '0.3.8'
         RELEASE_LOCATION: 'https://github.com/abcxyz/secure-setup-terraform/releases/download'
       run: |-
         ARCH="amd64";

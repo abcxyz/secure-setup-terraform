@@ -48,6 +48,7 @@ jobs:
           service_url: '${{ vars.TOKEN_MINTER_SERVICE_URL }}'
           requested_permissions: |-
             {
+              "scope": "update-checksums",
               "repositories": ["secure-setup-terraform"],
               "permissions": {
                 "pull_requests": "write",

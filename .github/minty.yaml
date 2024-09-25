@@ -29,25 +29,3 @@ scope:
     permissions:
       contents: 'write'
 
-  draft-release:
-    rule:
-      if: |-
-        assertion.workflow_ref == assertion.job_workflow_ref &&
-        assertion.workflow_ref.startsWith("abcxyz/secure-setup-terraform/.github/workflows/draft-release.yml") &&
-        assertion.event_name == 'workflow_dispatch'
-    repositories:
-      - 'secure-setup-terraform'
-    permissions:
-      contents: 'write'
-      pull_requests: 'write'
-
-  release:
-    rule:
-      if: |-
-        assertion.workflow_ref == assertion.job_workflow_ref &&
-        assertion.workflow_ref.startsWith("abcxyz/secure-setup-terraform/.github/workflows/release.yml") &&
-        assertion.event_name == 'push'
-    repositories:
-      - 'secure-setup-terraform'
-    permissions:
-      contents: 'write'

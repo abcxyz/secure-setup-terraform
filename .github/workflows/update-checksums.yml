@@ -36,15 +36,26 @@ jobs:
         id: 'generate-updates'
         run: './.github/generate_version_checksums.sh $GITHUB_WORKSPACE/terraform-checksums.json;'
 
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        if: '${{ env.CHANGES }}'
+        uses: 'google-github-actions/auth@71fee32a0bb7e97b4d33d548e7d957010649d8fa' # ratchet:google-github-actions/auth@v2
+        with:
+          create_credentials_file: false
+          export_environment_variables: false
+          workload_identity_provider: '${{ vars.TOKEN_MINTER_WIF_PROVIDER }}'
+          service_account: '${{ vars.TOKEN_MINTER_WIF_SERVICE_ACCOUNT }}'
+          token_format: 'id_token'
+          id_token_audience: '${{ vars.TOKEN_MINTER_SERVICE_AUDIENCE }}'
+          id_token_include_email: true
+
       # Generate a token that has permission to author a pull request
-      - name: 'Mint Token'
+      - name: 'mint token'
         id: 'mint-token'
         if: '${{ env.CHANGES }}'
-        uses: 'abcxyz/github-token-minter/.github/actions/mint-token@main' # ratchet:exclude
+        uses: 'abcxyz/github-token-minter/.github/actions/minty@69538257f4c831fbba0742ab96bbfdcab00e137e' # ratchet:abcxyz/github-token-minter/.github/actions/minty@main
         with:
-          wif_provider: '${{ vars.TOKEN_MINTER_WIF_PROVIDER }}'
-          wif_service_account: '${{ vars.TOKEN_MINTER_WIF_SERVICE_ACCOUNT }}'
-          service_audience: '${{ vars.TOKEN_MINTER_SERVICE_AUDIENCE }}'
+          id_token: '${{ steps.auth.outputs.id_token }}'
           service_url: '${{ vars.TOKEN_MINTER_SERVICE_URL }}'
           requested_permissions: |-
             {

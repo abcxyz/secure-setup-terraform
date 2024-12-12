@@ -1245,6 +1245,20 @@
       "binary_checksum": "938df07eda024c556322e4966502358e7eba5cacebc30268acacd606a2f5c9cd",
       "os": "linux",
       "arch": "arm64"
+    },
+    {
+      "version": "1.10.2",
+      "archive_checksum": "c347b0223c12d315baf8c9cc69913d5dbeb4388e96abe17805be4da9b63b5cdd",
+      "binary_checksum": "a3f39507416f48c46b20cf09caeaa50b0f20f74af2b82d1337ca1cd83fc8404a",
+      "os": "linux",
+      "arch": "amd64"
+    },
+    {
+      "version": "1.10.2",
+      "archive_checksum": "c170b97362ebf685c616be25f67e5fd7dc1014522595b0c55cd671bd3eb1d589",
+      "binary_checksum": "dcc8358b87307ae1cdf24ce0003b2302dd358221c1a138dbf2927832450d466c",
+      "os": "linux",
+      "arch": "arm64"
     }
   ]
 }

@@ -24,100 +24,100 @@ func TestTerraformLinter_FindViolations(t *testing.T) {
 	t.Parallel()
 
 	withLocalExec := `
-	resource "google_project_service" "run_api" {  
-		service = "run.googleapis.com"  
+	resource "google_project_service" "run_api" {
+		service = "run.googleapis.com"
 		disable_on_destroy = true
 	}
-	resource "google_cloud_run_service" "run_service" {  
-		name     = var.service_name  
-		location = var.region  
-		template {    
-			spec {      
-				containers {        
-					image = var.service_image      
-				}    
-			}  
-		}  
-		traffic {    
-			percent         = 100    
-			latest_revision = true  
-		}  
+	resource "google_cloud_run_service" "run_service" {
+		name     = var.service_name
+		location = var.region
+		template {
+			spec {
+				containers {
+					image = var.service_image
+				}
+			}
+		}
+		traffic {
+			percent         = 100
+			latest_revision = true
+		}
 		depends_on = [google_project_service.run_api, null_resource.echo]
 	}
-	resource "null_resource" "echo" {  
-		provisioner "local-exec" {    
-			command = "echo this is a bad practice" 
+	resource "null_resource" "echo" {
+		provisioner "local-exec" {
+			command = "echo this is a bad practice"
 		}
 	}
 	`
 	withoutLocalExec := `
-	resource "google_project_service" "run_api" {  
-		service = "run.googleapis.com"  
+	resource "google_project_service" "run_api" {
+		service = "run.googleapis.com"
 		disable_on_destroy = true
 	}
-	resource "google_cloud_run_service" "run_service" {  
-		name     = var.service_name  
-		location = var.region  
-		template {    
-			spec {      
-				containers {        
-					image = var.service_image      
-				}    
-			}  
-		}  
-		traffic {    
-			percent         = 100    
-			latest_revision = true  
-		}  
+	resource "google_cloud_run_service" "run_service" {
+		name     = var.service_name
+		location = var.region
+		template {
+			spec {
+				containers {
+					image = var.service_image
+				}
+			}
+		}
+		traffic {
+			percent         = 100
+			latest_revision = true
+		}
 		depends_on = [google_project_service.run_api]
 	}
 	`
 	withLocalExecAsString := `
-	resource "google_project_service" "local-exec" {  
-		service = "run.googleapis.com"  
+	resource "google_project_service" "local-exec" {
+		service = "run.googleapis.com"
 		disable_on_destroy = true
 	}
-	resource "google_cloud_run_service" "run_service" {  
-		name     = var.service_name  
-		location = var.region  
-		template {    
-			spec {      
-				containers {        
-					image = var.service_image      
-				}    
-			}  
-		}  
-		traffic {    
-			percent         = 100    
-			latest_revision = true  
-		}  
+	resource "google_cloud_run_service" "run_service" {
+		name     = var.service_name
+		location = var.region
+		template {
+			spec {
+				containers {
+					image = var.service_image
+				}
+			}
+		}
+		traffic {
+			percent         = 100
+			latest_revision = true
+		}
 		depends_on = [google_project_service.run_api]
 	}
 	`
 
 	withRemoteExec := `
-	resource "google_project_service" "run_api" {  
-		service = "run.googleapis.com"  
+	resource "google_project_service" "run_api" {
+		service = "run.googleapis.com"
 		disable_on_destroy = true
 	}
-	resource "google_cloud_run_service" "run_service" {  
-		name     = var.service_name  
-		location = var.region  
-		template {    
-			spec {      
-				containers {        
-					image = var.service_image      
-				}    
-			}  
-		}  
-		traffic {    
-			percent         = 100    
-			latest_revision = true  
-		}  
+	resource "google_cloud_run_service" "run_service" {
+		name     = var.service_name
+		location = var.region
+		template {
+			spec {
+				containers {
+					image = var.service_image
+				}
+			}
+		}
+		traffic {
+			percent         = 100
+			latest_revision = true
+		}
 		depends_on = [google_project_service.run_api, null_resource.echo]
 	}
-	resource "null_resource" "echo" {  
-		provisioner "remote-exec" {    
+	resource "null_resource" "echo" {
+		provisioner "remote-exec" {
 			inline = [
 				"puppet apply",
 				"consul join ${gcp_instance.web.private_ip}",
@@ -181,8 +181,6 @@ func TestTerraformLinter_FindViolations(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 

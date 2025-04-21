@@ -34,6 +34,7 @@ jobs:
       # Generate updates to the checksum file if there are new released versions of terraform
       - name: 'Generate Updates'
         id: 'generate-updates'
+        shell: 'bash'
         run: './.github/generate_version_checksums.sh "${GITHUB_WORKSPACE}/terraform-checksums.json";'
 
       - id: 'auth'

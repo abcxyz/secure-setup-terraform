@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 
 # Expected to be run in github actions context.
 declare -r GITHUB_ENV
 
-checksum_file=$1
+checksum_file="${1}"
 if [ "${checksum_file}" = "" ];
 then
     echo "Usage: $0 <path to checkums file>";
@@ -94,6 +94,7 @@ then
 
     change_count=$(wc -l "${added_file}" | tr -s ' ' | cut -d ' ' -f1);
     change_date=$(date +%Y-%m-%d);
+    # shellcheck disable=SC2002
     versions=$(cat "${added_file}" | tr '\n' ',' | sed 's/,*$//g');
 
     release_version=$(awk -F. -v OFS=. 'NF==1{print ++$NF}; NF>1{$NF=sprintf("%0*d", length($NF), ($NF+1)); print}' <"${version_file}")

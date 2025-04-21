@@ -6,8 +6,7 @@ set -euo pipefail
 declare -r GITHUB_ENV
 
 checksum_file="${1}"
-if [ "${checksum_file}" = "" ];
-then
+if [[ -n "${checksum_file}" ]]; then
     echo "Usage: $0 <path to checkums file>";
     exit 1;
 fi;

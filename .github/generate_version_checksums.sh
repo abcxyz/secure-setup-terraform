@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 # Expected to be run in github actions context.
 declare -r GITHUB_ENV
 
@@ -42,8 +44,7 @@ touch "${added_file}";
 while IFS= read -r version; 
 do 
     exists=$(jq --arg version "${version}" '.versions[] | select(.version==$version)' < "${checksum_file}");
-    if [ "${exists}" = "" ]; 
-    then
+    if [[ "${exists}" = "" ]]; then
         version_file=${version}.json;
         jq -r --arg version "${version}" 'select(.name=="terraform") | .versions[] | select(.version==$version)' < index.json > "${version_file}";
         sha_file=$(jq -r '.shasums' < "${version_file}");
@@ -87,8 +88,7 @@ do
 done < versions.list;
 
 # If there were any changes set some environment variables
-if [ -s "${added_file}" ]; 
-then
+if [[ -s "${added_file}" ]]; then
     version_file="../VERSION"
     action_file="../action.yml"
 

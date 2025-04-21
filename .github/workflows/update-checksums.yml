@@ -34,7 +34,7 @@ jobs:
       # Generate updates to the checksum file if there are new released versions of terraform
       - name: 'Generate Updates'
         id: 'generate-updates'
-        run: './.github/generate_version_checksums.sh $GITHUB_WORKSPACE/terraform-checksums.json;'
+        run: './.github/generate_version_checksums.sh "${GITHUB_WORKSPACE}/terraform-checksums.json";'
 
       - id: 'auth'
         name: 'Authenticate to Google Cloud'

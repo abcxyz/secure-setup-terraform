@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Expected to be run in github actions context.
+declare -r GITHUB_ENV
+
 checksum_file=$1
 if [ "${checksum_file}" = "" ];
 then
@@ -26,7 +29,7 @@ gpg --batch --yes --trust-model always --sign-key 34365D9472D7468F;
 
 release_url=https://releases.hashicorp.com/terraform;
 
-curl -s --remote-name ${release_url}/index.json;
+curl -s --remote-name "${release_url}/index.json";
 
 # Exclude all 0.x and pre-release versions
 jq -r 'select(.name=="terraform") | .versions[] | select(.version | (contains("-") or startswith("0.")) | not) | .version' < index.json > versions.list;
@@ -84,14 +87,14 @@ do
 done < versions.list;
 
 # If there were any changes set some environment variables
-if [ -s ${added_file} ]; 
+if [ -s "${added_file}" ]; 
 then
     version_file="../VERSION"
     action_file="../action.yml"
 
-    change_count=$(wc -l ${added_file} | tr -s ' ' | cut -d ' ' -f1);
+    change_count=$(wc -l "${added_file}" | tr -s ' ' | cut -d ' ' -f1);
     change_date=$(date +%Y-%m-%d);
-    versions=$(cat ${added_file} | tr '\n' ',' | sed 's/,*$//g');
+    versions=$(cat "${added_file}" | tr '\n' ',' | sed 's/,*$//g');
 
     release_version=$(awk -F. -v OFS=. 'NF==1{print ++$NF}; NF>1{$NF=sprintf("%0*d", length($NF), ($NF+1)); print}' <"${version_file}")
     sed -i "s/RELEASE_VERSION: '.*'/RELEASE_VERSION: '${release_version}'/g" "${action_file}"

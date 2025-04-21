@@ -39,7 +39,7 @@ jobs:
 
       - id: 'version'
         run: |-
-          echo version=$(cat VERSION) >> "${GITHUB_OUTPUT}"
+          echo version="$(cat VERSION)" >> "${GITHUB_OUTPUT}"
 
   create-tag:
     runs-on: 'ubuntu-latest'

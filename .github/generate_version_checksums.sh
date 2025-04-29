@@ -5,11 +5,17 @@ set -euo pipefail
 # Expected to be run in github actions context.
 declare -r GITHUB_ENV
 
-checksum_file="${1}"
-if [[ -n "${checksum_file}" ]]; then
+
+if [[ "$#" -ne 1 ]]; then
+    echo "Invalid number of arguments specified - expected 1, received $#"
+    echo "-> $*"
+    echo
     echo "Usage: $0 <path to checkums file>";
+    echo
     exit 1;
 fi;
+
+checksum_file="${1}"
 
 mkdir -p temp
 cd temp || exit

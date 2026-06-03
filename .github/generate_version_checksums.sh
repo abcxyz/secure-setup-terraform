@@ -97,6 +97,10 @@ do
 
 done < versions.list;
 
+# Sort the checksums file
+jq '.versions |= sort_by([(.version | split(".") | map(tonumber)), .os, .arch])' "${checksum_file}" > sorted.json
+mv sorted.json "${checksum_file}"
+
 # If there were any changes set some environment variables
 if [[ -s "${added_file}" ]]; then
     version_file="../VERSION"

@@ -50,9 +50,8 @@ jobs:
       matrix:
         os:
           - 'ubuntu-latest'
-          # TODO: add back after releasing checksums for these env.
-          # - 'windows-latest'
-          # - 'macos-latest'
+          - 'windows-latest'
+          - 'macos-latest'
         terraform_version:
           - '1.7.1'
     steps:

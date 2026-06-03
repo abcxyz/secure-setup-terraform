@@ -15,8 +15,9 @@ if [[ "$#" -ne 1 ]]; then
     exit 1;
 fi;
 
-checksum_file="${1}"
+checksum_file=$(realpath "${1}")
 
+rm -rf temp
 mkdir -p temp
 cd temp || exit
 
@@ -48,8 +49,10 @@ touch "${added_file}";
 
 while IFS= read -r version; 
 do 
-    exists=$(jq --arg version "${version}" '.versions[] | select(.version==$version)' < "${checksum_file}");
-    if [[ "${exists}" = "" ]]; then
+    available_builds=$(jq -r --arg version "${version}" 'select(.name=="terraform") | .versions[] | select(.version==$version) | .builds[] | select((.os=="linux" or .os=="darwin" or .os=="windows") and (.arch=="amd64" or .arch=="arm64")) | .filename' < index.json | wc -l)
+    current_builds=$(jq --arg version "${version}" '[.versions[] | select(.version==$version and (.os=="linux" or .os=="darwin" or .os=="windows") and (.arch=="amd64" or .arch=="arm64"))] | length' < "${checksum_file}")
+
+    if [[ ${current_builds} -lt ${available_builds} ]]; then
         version_file=${version}.json;
         jq -r --arg version "${version}" 'select(.name=="terraform") | .versions[] | select(.version==$version)' < index.json > "${version_file}";
         sha_file=$(jq -r '.shasums' < "${version_file}");
@@ -63,25 +66,28 @@ do
             do
                 exists_build=$(jq -r --arg os "${os}" --arg arch "${arch}" '.builds[] | select(.os==$os and .arch==$arch) | .filename' < "${version_file}" 2>/dev/null || true)
                 if [[ -n "${exists_build}" ]]; then
-                    bin_url=$(jq -r --arg os "${os}" --arg arch "${arch}" '.builds[] | select(.os==$os and .arch==$arch) | .url' < "${version_file}")
-                    bin_file=$(jq -r --arg os "${os}" --arg arch "${arch}" '.builds[] | select(.os==$os and .arch==$arch) | .filename' < "${version_file}")
-                    curl -s --remote-name "${bin_url}"
+                    exists_in_file=$(jq --arg version "${version}" --arg os "${os}" --arg arch "${arch}" '.versions[] | select(.version==$version and .os==$os and .arch==$arch)' < "${checksum_file}")
+                    if [[ "${exists_in_file}" = "" ]]; then
+                        bin_url=$(jq -r --arg os "${os}" --arg arch "${arch}" '.builds[] | select(.os==$os and .arch==$arch) | .url' < "${version_file}")
+                        bin_file=$(jq -r --arg os "${os}" --arg arch "${arch}" '.builds[] | select(.os==$os and .arch==$arch) | .filename' < "${version_file}")
+                        curl -s --remote-name "${bin_url}"
 
-                    gpg --batch --verify "${sig_file}" "${sha_file}";
-                    shasum --algorithm 256 --check --ignore-missing "${sha_file}";
-                    unzip -qq -o "${bin_file}";
-                    arch_sum=$(grep "${bin_file}" "${sha_file}" | cut -d' ' -f1);
+                        gpg --batch --verify "${sig_file}" "${sha_file}";
+                        shasum --algorithm 256 --check --ignore-missing "${sha_file}";
+                        unzip -qq -o "${bin_file}";
+                        arch_sum=$(grep "${bin_file}" "${sha_file}" | cut -d' ' -f1);
 
-                    binary_name="terraform"
-                    if [[ "${os}" = "windows" ]]; then
-                        binary_name="terraform.exe"
+                        binary_name="terraform"
+                        if [[ "${os}" = "windows" ]]; then
+                            binary_name="terraform.exe"
+                        fi
+                        bin_sum=$(shasum -a 256 "${binary_name}" | cut -d' ' -f1);
+                        rm -f "${binary_name}"
+
+                        version_info=$(jq -c -n --arg version "${version}" --arg archive_checksum "${arch_sum}" --arg binary_checksum "${bin_sum}" --arg os "${os}" --arg arch "${arch}" '$ARGS.named');
+                        jq --argjson version_info "${version_info}" '.versions += [$version_info]' < "${checksum_file}" > updated.json;
+                        mv updated.json "${checksum_file}";
                     fi
-                    bin_sum=$(shasum -a 256 "${binary_name}" | cut -d' ' -f1);
-                    rm -f "${binary_name}"
-
-                    version_info=$(jq -c -n --arg version "${version}" --arg archive_checksum "${arch_sum}" --arg binary_checksum "${bin_sum}" --arg os "${os}" --arg arch "${arch}" '$ARGS.named');
-                    jq --argjson version_info "${version_info}" '.versions += [$version_info]' < "${checksum_file}" > updated.json;
-                    mv updated.json "${checksum_file}";
                 fi
             done
         done
@@ -90,6 +96,10 @@ do
     fi
 
 done < versions.list;
+
+# Sort the checksums file
+jq '.versions |= sort_by([(.version | split(".") | map(tonumber)), .os, .arch])' "${checksum_file}" > sorted.json
+mv sorted.json "${checksum_file}"
 
 # If there were any changes set some environment variables
 if [[ -s "${added_file}" ]]; then

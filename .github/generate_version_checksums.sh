@@ -57,35 +57,34 @@ do
         curl -s --remote-name "${release_url}/${version}/${sha_file}";
         curl -s --remote-name "${release_url}/${version}/${sig_file}";
 
-        # Iterate over both supported architectures
-        set -- amd64 arm64;
-        for arch in "$@";
+        for os in linux darwin windows;
         do
-            bin_url=$(jq -r --arg arch "${arch}" '.builds[] | select(.os=="linux" and .arch==$arch) | .url' < "${version_file}");
-            bin_file=$(jq -r --arg arch "${arch}" '.builds[] | select(.os=="linux" and .arch==$arch) | .filename' < "${version_file}");
-            # Download the archive, sha file and signature
-            curl -s --remote-name "${bin_url}"
+            for arch in amd64 arm64;
+            do
+                exists_build=$(jq -r --arg os "${os}" --arg arch "${arch}" '.builds[] | select(.os==$os and .arch==$arch) | .filename' < "${version_file}" 2>/dev/null || true)
+                if [[ -n "${exists_build}" ]]; then
+                    bin_url=$(jq -r --arg os "${os}" --arg arch "${arch}" '.builds[] | select(.os==$os and .arch==$arch) | .url' < "${version_file}")
+                    bin_file=$(jq -r --arg os "${os}" --arg arch "${arch}" '.builds[] | select(.os==$os and .arch==$arch) | .filename' < "${version_file}")
+                    curl -s --remote-name "${bin_url}"
 
-            # Verify the signature against the sha file
-            gpg --batch --verify "${sig_file}" "${sha_file}";
+                    gpg --batch --verify "${sig_file}" "${sha_file}";
+                    shasum --algorithm 256 --check --ignore-missing "${sha_file}";
+                    unzip -qq -o "${bin_file}";
+                    arch_sum=$(grep "${bin_file}" "${sha_file}" | cut -d' ' -f1);
 
-            # Verify the archive's checksum
-            shasum --algorithm 256 --check --ignore-missing "${sha_file}";
+                    binary_name="terraform"
+                    if [[ "${os}" = "windows" ]]; then
+                        binary_name="terraform.exe"
+                    fi
+                    bin_sum=$(shasum -a 256 "${binary_name}" | cut -d' ' -f1);
+                    rm -f "${binary_name}"
 
-            # Extract the binary from the archive
-            unzip -qq -o "${bin_file}";
-
-            # Extract only the shasum for the archive we care about
-            arch_sum=$(grep "${bin_file}" "${sha_file}" | cut -d' ' -f1);
-
-            # Produce a checksum of the binary
-            bin_sum=$(shasum -a 256 terraform | cut -d' ' -f1);
-
-            version_info=$(jq -c -n --arg version "${version}" --arg archive_checksum "${arch_sum}" --arg binary_checksum "${bin_sum}" --arg os "linux" --arg arch "${arch}" '$ARGS.named');
-            jq --argjson version_info "${version_info}" '.versions += [$version_info]' < "${checksum_file}" > updated.json;
-            mv updated.json "${checksum_file}";
-
-        done;
+                    version_info=$(jq -c -n --arg version "${version}" --arg archive_checksum "${arch_sum}" --arg binary_checksum "${bin_sum}" --arg os "${os}" --arg arch "${arch}" '$ARGS.named');
+                    jq --argjson version_info "${version_info}" '.versions += [$version_info]' < "${checksum_file}" > updated.json;
+                    mv updated.json "${checksum_file}";
+                fi
+            done
+        done
 
         echo "${version}" >> "${added_file}";
     fi

@@ -61,26 +61,73 @@ runs:
         RELEASE_LOCATION: 'https://github.com/abcxyz/secure-setup-terraform/releases/download'
       run: |-
         ARCH="amd64";
-        if [ "${{runner.platform}}" = "ARM64" ];
+        RUNNER_ARCH="${{ runner.arch || runner.platform }}"
+        if [ "${RUNNER_ARCH}" = "ARM64" ] || [ "${RUNNER_ARCH}" = "arm64" ];
         then
           ARCH="arm64"
         fi
 
-        curl -H "Authorization: token ${{ github.token }}" -LO "${{env.RELEASE_LOCATION}}/v${{env.RELEASE_VERSION}}/secure-setup-terraform_${{env.RELEASE_VERSION}}_linux_${ARCH}.tar.gz"
-        curl -H "Authorization: token ${{ github.token }}" -Lo terraform-checksums.json "${{env.RELEASE_LOCATION}}/v${{env.RELEASE_VERSION}}/secure-setup-terraform_${{env.RELEASE_VERSION}}_checksums.json"
-        tar xf secure-setup-terraform_${{env.RELEASE_VERSION}}_linux_${ARCH}.tar.gz
+        OS="${{ runner.os }}"
+        case "${OS}" in
+          Linux)
+            GOOS="linux"
+            EXT="tar.gz"
+            ;;
+          macOS)
+            GOOS="darwin"
+            EXT="tar.gz"
+            ;;
+          Windows)
+            GOOS="windows"
+            EXT="zip"
+            ;;
+          *)
+            echo "Unsupported OS: ${OS}" >&2
+            exit 1
+            ;;
+        esac
+
+        FILENAME="secure-setup-terraform_${RELEASE_VERSION}_${GOOS}_${ARCH}.${EXT}"
+        DOWNLOAD_URL="${RELEASE_LOCATION}/v${RELEASE_VERSION}/${FILENAME}"
+        echo "Attempting to download ${DOWNLOAD_URL}..."
+
+        if curl -sSLf -H "Authorization: token ${{ github.token }}" -O "${DOWNLOAD_URL}"; then
+          echo "Downloaded release binary."
+          curl -sSL -H "Authorization: token ${{ github.token }}" -Lo terraform-checksums.json "${RELEASE_LOCATION}/v${RELEASE_VERSION}/secure-setup-terraform_${RELEASE_VERSION}_checksums.json"
+          if [ "${EXT}" = "zip" ]; then
+            unzip -o "${FILENAME}"
+          else
+            tar xf "${FILENAME}"
+          fi
+        else
+          echo "WARNING: Release binary not found. Building from source..."
+          if ! command -v go &> /dev/null; then
+            echo "Error: Go is not installed, cannot build from source." >&2
+            exit 1
+          fi
+          ACTION_DIR="${{ github.action_path }}"
+          go build -C "${ACTION_DIR}" -o "$(pwd)/lint-terraform" ./cmd/lint-terraform
+          go build -C "${ACTION_DIR}" -o "$(pwd)/lint-action" ./cmd/lint-action
+          if [ ! -f "terraform-checksums.json" ]; then
+            cp "${ACTION_DIR}/terraform-checksums.json" .
+          fi
+        fi
+
+        # Add current directory to GITHUB_PATH so we can run lint-terraform/lint-action
+        echo "$(pwd)" >> "${GITHUB_PATH}"
 
         # Verify the terraform binary checksum
-        CHECKSUM=$(jq -r --arg version ${{ inputs.terraform_version }} '.versions[] | select(.version==$version and .arch=="'${ARCH}'" and .os=="linux") | .binary_checksum' < terraform-checksums.json)
+        CHECKSUM=$(jq -r --arg version ${{ inputs.terraform_version }} '.versions[] | select(.version==$version and .arch=="'${ARCH}'" and .os=="'${GOOS}'") | .binary_checksum' < terraform-checksums.json)
 
         # The terraform wrapper installs the actual binary as terraform-bin, check
         # for its existence and verify its checksum. Otherwise look for the default
-        # terrafrom binary
-        if [ -f "$(which terraform-bin)" ];
-        then
-          echo "${CHECKSUM}  $(which terraform-bin)" > terraform.sha256
+        # terraform binary
+        TF_PATH=$(which terraform-bin 2>/dev/null || which terraform 2>/dev/null)
+        if [ -n "${TF_PATH}" ]; then
+          echo "${CHECKSUM}  ${TF_PATH}" > terraform.sha256
         else
-          echo "${CHECKSUM}  $(which terraform)" > terraform.sha256
+          echo "Could not find terraform binary" >&2
+          exit 1
         fi
         shasum --algorithm 256 --check terraform.sha256
 
@@ -90,13 +137,13 @@ runs:
       env:
         LOCATION: '${{inputs.terraform_module_location}}'
       run: |-
-        ./lint-terraform ${{env.LOCATION}}
+        lint-terraform ${{env.LOCATION}}
 
     # Search the .github/workflows for this project and run a linter that fails if it finds a direct call to the 'hashicorp/setup-terraform' action
     - name: 'lint-action'
       shell: 'bash'
       run: |-
-        ./lint-action ./.github/workflows
+        lint-action ./.github/workflows
 
     # Mark the provider file readonly so that new providers cannot be added during actuation
     - name: 'lock-provider-file'

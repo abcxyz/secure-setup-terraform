@@ -59,15 +59,20 @@ runs:
       env:
         RELEASE_VERSION: '0.3.58'
         RELEASE_LOCATION: 'https://github.com/abcxyz/secure-setup-terraform/releases/download'
+        TERRAFORM_VERSION: '${{ inputs.terraform_version }}'
+        RUNNER_ARCH: '${{ runner.arch || runner.platform }}'
+        OS: '${{ runner.os }}'
       run: |-
+        BIN_DIR="${RUNNER_TEMP}/secure-setup-terraform-bin"
+        mkdir -p "${BIN_DIR}"
+        cd "${BIN_DIR}"
+
         ARCH="amd64";
-        RUNNER_ARCH="${{ runner.arch || runner.platform }}"
         if [ "${RUNNER_ARCH}" = "ARM64" ] || [ "${RUNNER_ARCH}" = "arm64" ];
         then
           ARCH="arm64"
         fi
 
-        OS="${{ runner.os }}"
         case "${OS}" in
           Linux)
             GOOS="linux"
@@ -113,11 +118,11 @@ runs:
           fi
         fi
 
-        # Add current directory to GITHUB_PATH so we can run lint-terraform/lint-action
-        echo "$(pwd)" >> "${GITHUB_PATH}"
+        # Add BIN_DIR to GITHUB_PATH so we can run lint-terraform/lint-action
+        echo "${BIN_DIR}" >> "${GITHUB_PATH}"
 
         # Verify the terraform binary checksum
-        CHECKSUM=$(jq -r --arg version ${{ inputs.terraform_version }} '.versions[] | select(.version==$version and .arch=="'${ARCH}'" and .os=="'${GOOS}'") | .binary_checksum' < terraform-checksums.json)
+        CHECKSUM=$(jq -r --arg version ${TERRAFORM_VERSION} '.versions[] | select(.version==$version and .arch=="'${ARCH}'" and .os=="'${GOOS}'") | .binary_checksum' < terraform-checksums.json)
 
         # The terraform wrapper installs the actual binary as terraform-bin, check
         # for its existence and verify its checksum. Otherwise look for the default
@@ -142,9 +147,9 @@ runs:
     - name: 'lint-terraform'
       shell: 'bash'
       env:
-        LOCATION: '${{inputs.terraform_module_location}}'
+        LOCATION: '${{ inputs.terraform_module_location }}'
       run: |-
-        lint-terraform ${{env.LOCATION}}
+        lint-terraform "${LOCATION}"
 
     # Search the .github/workflows for this project and run a linter that fails if it finds a direct call to the 'hashicorp/setup-terraform' action
     - name: 'lint-action'
@@ -157,5 +162,7 @@ runs:
       if: |-
         ${{ inputs.protect_lockfile == 'true' }}
       shell: 'bash'
+      env:
+        TERRAFORM_LOCKFILE_LOCATION: '${{ inputs.terraform_lockfile_location }}'
       run: |-
-        chmod 444 ${{ inputs.terraform_lockfile_location }}/.terraform.lock.hcl
+        chmod 444 "${TERRAFORM_LOCKFILE_LOCATION}/.terraform.lock.hcl"

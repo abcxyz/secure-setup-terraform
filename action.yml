@@ -38,6 +38,10 @@ inputs:
     description: 'Path to the directory containing the terraform files that should be linted.'
     required: false
     default: './'
+  actions_location:
+    description: 'Path to the directory containing the GitHub workflows and actions that should be linted.'
+    required: false
+    default: './.github/workflows'
   protect_lockfile:
     description: 'When true, enables the step that marks the lock file readonly so that no provider updates can occur.'
     required: false
@@ -154,8 +158,10 @@ runs:
     # Search the .github/workflows for this project and run a linter that fails if it finds a direct call to the 'hashicorp/setup-terraform' action
     - name: 'lint-action'
       shell: 'bash'
+      env:
+        LOCATION: '${{inputs.actions_location}}'
       run: |-
-        lint-action ./.github/workflows
+        lint-action ${{env.LOCATION}}
 
     # Mark the provider file readonly so that new providers cannot be added during actuation
     - name: 'lock-provider-file'

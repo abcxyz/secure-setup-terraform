@@ -4626,6 +4626,48 @@
       "binary_checksum": "7a06a1c54d981866fe20f1b99e93ac61b6073a9edf8022b73d452b005958ac05",
       "os": "windows",
       "arch": "arm64"
+    },
+    {
+      "version": "1.16.3",
+      "archive_checksum": "1b933c61782390531374290309ada8406cd923647893c2f52b5dd838de23803a",
+      "binary_checksum": "fcc9d94f64cbace5b5e05a42a89d99615534f27f4816265250c2092ad3f7ffa1",
+      "os": "darwin",
+      "arch": "amd64"
+    },
+    {
+      "version": "1.16.3",
+      "archive_checksum": "c2c45425ea4568da9803e127e589186cb3798a5944d9aff5a5bc15dd18267560",
+      "binary_checksum": "caa8ad67fa16a856032d1fdd957bba184c129b4683dfbf177469e0f4fff98b46",
+      "os": "darwin",
+      "arch": "arm64"
+    },
+    {
+      "version": "1.16.3",
+      "archive_checksum": "093b6ae9a2228af5029c41606bc96eb583553528aad1bfe7e0b4d62fc91e25d8",
+      "binary_checksum": "591ffb463268fced7c25fd20fc7e9fe0f2a3c824eab59d847e99729b825d1ac7",
+      "os": "linux",
+      "arch": "amd64"
+    },
+    {
+      "version": "1.16.3",
+      "archive_checksum": "b6b293550af7a6a7ffd867a04900ce161db86ec9407b234a636c2adbae2ca9f0",
+      "binary_checksum": "b071d2a17aa01d3c797252314252c72dca855f466f3ac3c1ae49ee3027d9bb85",
+      "os": "linux",
+      "arch": "arm64"
+    },
+    {
+      "version": "1.16.3",
+      "archive_checksum": "6f908a90e5637afe72705290afd1cd71fc4f2877303ca77f05a8c6ead196b11c",
+      "binary_checksum": "d92457fc7173492c833fcead64d76629d279ee73dc3cf8f7bb24c6acac360710",
+      "os": "windows",
+      "arch": "amd64"
+    },
+    {
+      "version": "1.16.3",
+      "archive_checksum": "58828475988ba0674c8854f84991dec2f3372abc78d6def6274d47493b011700",
+      "binary_checksum": "10d7fa901665a86bd05b54e067aae58af6f806a3ed15dc09d9bfbf7dd1de9554",
+      "os": "windows",
+      "arch": "arm64"
     }
   ]
 }

@@ -54,19 +54,15 @@ runs:
         cli_config_credentials_hostname: '${{ inputs.cli_config_credentials_hostname }}'
         cli_config_credentials_token: '${{ inputs.cli_config_credentials_token }}'
 
-    - name: 'secure-terraform'
+    - name: 'resolve secure-setup-terraform release'
+      id: 'release'
       shell: 'bash'
       env:
         RELEASE_VERSION: '0.3.65'
         RELEASE_LOCATION: 'https://github.com/abcxyz/secure-setup-terraform/releases/download'
-        TERRAFORM_VERSION: '${{ inputs.terraform_version }}'
         RUNNER_ARCH: '${{ runner.arch || runner.platform }}'
         OS: '${{ runner.os }}'
       run: |-
-        BIN_DIR="${RUNNER_TEMP}/secure-setup-terraform-bin"
-        mkdir -p "${BIN_DIR}"
-        cd "${BIN_DIR}"
-
         ARCH="amd64";
         if [ "${RUNNER_ARCH}" = "ARM64" ] || [ "${RUNNER_ARCH}" = "arm64" ];
         then
@@ -92,13 +88,53 @@ runs:
             ;;
         esac
 
+        BIN_DIR="${RUNNER_TEMP}/secure-setup-terraform-bin"
         FILENAME="secure-setup-terraform_${RELEASE_VERSION}_${GOOS}_${ARCH}.${EXT}"
-        DOWNLOAD_URL="${RELEASE_LOCATION}/v${RELEASE_VERSION}/${FILENAME}"
-        echo "Attempting to download ${DOWNLOAD_URL}..."
+        {
+          echo "bin_dir=${BIN_DIR}"
+          echo "arch=${ARCH}"
+          echo "goos=${GOOS}"
+          echo "ext=${EXT}"
+          echo "filename=${FILENAME}"
+          echo "url=${RELEASE_LOCATION}/v${RELEASE_VERSION}/${FILENAME}"
+          echo "checksums_url=${RELEASE_LOCATION}/v${RELEASE_VERSION}/secure-setup-terraform_${RELEASE_VERSION}_checksums.json"
+        } >> "${GITHUB_OUTPUT}"
 
-        if curl -sSLf -H "Authorization: token ${{ github.token }}" -O "${DOWNLOAD_URL}"; then
+    # On GitHub Enterprise Server, download-release uses a copy of the release
+    # mirrored onto this instance when present, and github.com otherwise.
+    - name: 'download secure-setup-terraform release'
+      id: 'download'
+      continue-on-error: true
+      uses: 'abcxyz/actions/.github/actions/download-release@d8c8e723b4a90310d3b2affcc51c6ab8bd0313fc' # ratchet:abcxyz/actions/.github/actions/download-release@main
+      with:
+        url: '${{ steps.release.outputs.url }}'
+        path: '${{ steps.release.outputs.bin_dir }}/${{ steps.release.outputs.filename }}'
+
+    - name: 'download terraform checksums'
+      if: |
+        steps.download.outcome == 'success'
+      continue-on-error: true
+      uses: 'abcxyz/actions/.github/actions/download-release@d8c8e723b4a90310d3b2affcc51c6ab8bd0313fc' # ratchet:abcxyz/actions/.github/actions/download-release@main
+      with:
+        url: '${{ steps.release.outputs.checksums_url }}'
+        path: '${{ steps.release.outputs.bin_dir }}/terraform-checksums.json'
+
+    - name: 'secure-terraform'
+      shell: 'bash'
+      env:
+        TERRAFORM_VERSION: '${{ inputs.terraform_version }}'
+        BIN_DIR: '${{ steps.release.outputs.bin_dir }}'
+        ARCH: '${{ steps.release.outputs.arch }}'
+        GOOS: '${{ steps.release.outputs.goos }}'
+        EXT: '${{ steps.release.outputs.ext }}'
+        FILENAME: '${{ steps.release.outputs.filename }}'
+        DOWNLOADED: '${{ steps.download.outcome }}'
+      run: |-
+        mkdir -p "${BIN_DIR}"
+        cd "${BIN_DIR}"
+
+        if [ "${DOWNLOADED}" = "success" ]; then
           echo "Downloaded release binary."
-          curl -sSL -H "Authorization: token ${{ github.token }}" -Lo terraform-checksums.json "${RELEASE_LOCATION}/v${RELEASE_VERSION}/secure-setup-terraform_${RELEASE_VERSION}_checksums.json"
           if [ "${EXT}" = "zip" ]; then
             unzip -o "${FILENAME}"
           else

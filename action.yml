@@ -58,7 +58,7 @@ runs:
       id: 'release'
       shell: 'bash'
       env:
-        RELEASE_VERSION: '0.3.66'
+        RELEASE_VERSION: '0.3.67'
         RELEASE_LOCATION: 'https://github.com/abcxyz/secure-setup-terraform/releases/download'
         RUNNER_ARCH: '${{ runner.arch || runner.platform }}'
         OS: '${{ runner.os }}'
